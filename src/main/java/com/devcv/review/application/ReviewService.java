@@ -29,7 +29,7 @@ public interface ReviewService {
     // 이력서 구매후기 삭제
     void deleteReview(Long resumeId, Long memberId, Long reviewId);
 
-    default Review dtoToEntity(ReviewDto resumeReviewDto, Resume resume, Member member, Order order) {
+    default Review dtoToEntity(ReviewDto resumeReviewDto, Resume resume, Member member,Order order) {
 
         Review resumeReview = Review.builder()
                 .reviewId(resumeReviewDto.getReviewId())
