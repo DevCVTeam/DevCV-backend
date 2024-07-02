@@ -4,6 +4,7 @@ import com.devcv.common.exception.ErrorCode;
 import com.devcv.common.exception.BadRequestException;
 import com.devcv.common.exception.NotFoundException;
 import com.devcv.member.domain.Member;
+import com.devcv.member.domain.dto.MemberResponse;
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.OrderResume;
 import com.devcv.order.domain.dto.*;
@@ -34,9 +35,14 @@ public class OrderService {
     private final OrderResumeRepository orderResumeRepository;
     private final PointService pointService;
 
-    public OrderSheet getOrderSheet(Member member, Resume resume) {
-        Long myPoint = pointService.getMyPoint(member.getMemberId());
-        return OrderSheet.of(member, resume, myPoint);
+    public OrderSheet getOrderSheet(Member member, Long resumeId) {
+        Resume resume = resumeRepository.findByResumeId(resumeId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
+        OrderSheetResume orderSheetResume = OrderSheetResume.from(resume);
+
+        Long currentPoint = pointService.getMyPoint(member.getMemberId());
+        MemberResponse memberResponse = MemberResponse.of(member, currentPoint);
+        return OrderSheet.of(memberResponse, orderSheetResume);
     }
 
     @Transactional

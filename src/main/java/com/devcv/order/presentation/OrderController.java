@@ -7,8 +7,6 @@ import com.devcv.member.domain.Member;
 import com.devcv.order.application.OrderService;
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.dto.*;
-import com.devcv.resume.application.ResumeService;
-import com.devcv.resume.domain.Resume;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,15 +21,14 @@ import java.net.URI;
 public class OrderController {
 
     private final OrderService orderService;
-    private final ResumeService resumeService;
     private final MemberService memberService;
 
     @GetMapping("/resumes/{resume-id}/checkout")
     public ResponseEntity<OrderSheet> checkoutResume(@AuthenticationPrincipal UserDetails userDetails,
                                                      @PathVariable("resume-id") Long resumeId) {
         Member member = extractMember(userDetails);
-        Resume resume = resumeService.findByResumeId(resumeId);
-        return ResponseEntity.ok().body(orderService.getOrderSheet(member, resume));
+        OrderSheet response = orderService.getOrderSheet(member, resumeId);
+        return ResponseEntity.ok().body(response);
     }
 
     @PostMapping("/orders")
