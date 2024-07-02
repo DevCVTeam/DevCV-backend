@@ -40,10 +40,10 @@ public class OrderController {
     }
 
     @GetMapping("/orders/{order-number}")
-    public ResponseEntity<OrderResponse> getOrderResponse(@AuthenticationPrincipal UserDetails userDetails,
-                                                          @PathVariable("order-number") String orderNumber) {
+    public ResponseEntity<OrderDetailResponse> getOrderResponse(@AuthenticationPrincipal UserDetails userDetails,
+                                                                @PathVariable("order-number") String orderNumber) {
         Member member = extractMember(userDetails);
-        OrderResponse response = orderService.findByOrderNumber(orderNumber, member);
+        OrderDetailResponse response = orderService.findByOrderNumber(orderNumber, member);
         return ResponseEntity.ok().body(response);
     }
 
