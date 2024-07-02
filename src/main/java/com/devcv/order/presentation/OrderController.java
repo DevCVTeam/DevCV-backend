@@ -51,7 +51,8 @@ public class OrderController {
     public ResponseEntity<OrderListResponse> getOrderListResponse(@AuthenticationPrincipal UserDetails userDetails,
                                                                   @PathVariable("member-id") Long memberId) {
         Member member = extractMember(userDetails, memberId);
-        return ResponseEntity.ok().body(orderService.getOrderListByMember(member));
+        OrderListResponse response = orderService.getOrderListByMember(member);
+        return ResponseEntity.ok().body(response);
     }
 
     private Member extractMember(UserDetails userDetails) {

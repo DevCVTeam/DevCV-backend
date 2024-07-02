@@ -8,7 +8,6 @@ import com.devcv.member.domain.dto.MemberResponse;
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.OrderResume;
 import com.devcv.order.domain.dto.*;
-import com.devcv.order.exception.OrderNotFoundException;
 import com.devcv.order.repository.OrderResumeRepository;
 import com.devcv.point.application.PointService;
 import com.devcv.resume.domain.Resume;
@@ -144,7 +143,7 @@ public class OrderService {
     }
 
     private OrderResponse getOrderResponse(Order order) {
-        List<OrderResume> orderResumeList = orderResumeRepository.findAllByOrder_OrderId(order.getOrderId());
+        List<OrderResume> orderResumeList = orderResumeRepository.findAllByOrderId(order.getOrderId());
         return OrderResponse.of(order, orderResumeListToDto(orderResumeList));
     }
 

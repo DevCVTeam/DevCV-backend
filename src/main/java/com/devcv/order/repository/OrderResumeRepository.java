@@ -10,8 +10,14 @@ import java.util.List;
 
 public interface OrderResumeRepository extends JpaRepository<OrderResume, Long> {
 
-    @Query("SELECT o FROM OrderResume o JOIN FETCH o.resume i JOIN FETCH i.imageList WHERE o.order.orderId = :orderId")
-    List<OrderResume> findAllByOrder_OrderId(@Param("orderId") Long orderId);
+    @Query("SELECT orr " +
+            "FROM OrderResume orr " +
+            "JOIN FETCH orr.resume r " +
+            "JOIN FETCH r.member " +
+            "JOIN FETCH r.category " +
+            "JOIN FETCH r.imageList " +
+            "WHERE orr.order.orderId = :orderId")
+    List<OrderResume> findAllByOrderId(@Param("orderId") Long orderId);
 
     @Query("SELECT orr " +
             "FROM OrderResume orr " +
