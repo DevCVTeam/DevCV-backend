@@ -36,13 +36,17 @@ public class OrderService {
     private final PointService pointService;
 
     public OrderSheet getOrderSheet(Member member, Long resumeId) {
-        Resume resume = resumeRepository.findByResumeId(resumeId)
-                .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
+        Resume resume = getResume(resumeId);
+        checkResumeStatus(resume);
         OrderSheetResume orderSheetResume = OrderSheetResume.from(resume);
-
         Long currentPoint = pointService.getMyPoint(member.getMemberId());
         MemberResponse memberResponse = MemberResponse.of(member, currentPoint);
         return OrderSheet.of(memberResponse, orderSheetResume);
+    }
+
+    private Resume getResume(Long resumeId) {
+        return resumeRepository.findByResumeId(resumeId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
     }
 
     @Transactional
@@ -54,8 +58,7 @@ public class OrderService {
 
         List<OrderResume> orderResumeList = new ArrayList<>();
         for (CartDto dto : cartOrderRequest.cartList()) {
-            Resume resume = resumeRepository.findByResumeId(dto.resumeId())
-                    .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
+            Resume resume = getResume(dto.resumeId());
             validateResume(resume, dto, existingResumeIdList);
             OrderResume orderResume = OrderResume.of(order, resume);
             orderResumeList.add(orderResume);
