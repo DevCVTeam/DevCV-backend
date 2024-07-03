@@ -4,14 +4,15 @@ import com.devcv.common.exception.ErrorCode;
 import com.devcv.common.exception.BadRequestException;
 import com.devcv.common.exception.NotFoundException;
 import com.devcv.member.domain.Member;
+import com.devcv.member.domain.dto.MemberResponse;
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.OrderResume;
 import com.devcv.order.domain.dto.*;
-import com.devcv.order.exception.OrderNotFoundException;
 import com.devcv.order.repository.OrderResumeRepository;
 import com.devcv.point.application.PointService;
 import com.devcv.resume.domain.Resume;
 import com.devcv.order.repository.OrderRepository;
+import com.devcv.resume.domain.dto.ResumeDto;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
 import com.devcv.resume.repository.ResumeRepository;
 import com.devcv.review.exception.AlreadyExistsException;
@@ -34,9 +35,18 @@ public class OrderService {
     private final OrderResumeRepository orderResumeRepository;
     private final PointService pointService;
 
-    public OrderSheet getOrderSheet(Member member, Resume resume) {
-        Long myPoint = pointService.getMyPoint(member.getMemberId());
-        return OrderSheet.of(member, resume, myPoint);
+    public OrderSheet getOrderSheet(Member member, Long resumeId) {
+        Resume resume = getResume(resumeId);
+        checkResumeStatus(resume);
+        OrderSheetResume orderSheetResume = OrderSheetResume.from(resume);
+        Long currentPoint = pointService.getMyPoint(member.getMemberId());
+        MemberResponse memberResponse = MemberResponse.of(member, currentPoint);
+        return OrderSheet.of(memberResponse, orderSheetResume);
+    }
+
+    private Resume getResume(Long resumeId) {
+        return resumeRepository.findByResumeId(resumeId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
     }
 
     @Transactional
@@ -48,8 +58,7 @@ public class OrderService {
 
         List<OrderResume> orderResumeList = new ArrayList<>();
         for (CartDto dto : cartOrderRequest.cartList()) {
-            Resume resume = resumeRepository.findByResumeId(dto.resumeId())
-                    .orElseThrow(() -> new NotFoundException(ErrorCode.RESUME_NOT_FOUND));
+            Resume resume = getResume(dto.resumeId());
             validateResume(resume, dto, existingResumeIdList);
             OrderResume orderResume = OrderResume.of(order, resume);
             orderResumeList.add(orderResume);
@@ -112,20 +121,17 @@ public class OrderService {
         }
     }
 
-    public OrderResponse findByOrderNumber(String orderNumber, Member member) {
-        Order order = orderRepository.findOrderByOrderNumberAndMember(orderNumber, member)
-                .orElseThrow(() -> new OrderNotFoundException(ErrorCode.ORDER_NOT_FOUND));
-        return getOrderResponse(order);
+    public OrderDetailResponse findByOrderNumber(String orderNumber, Member member) {
+        List<OrderResume> orderResumeList = orderResumeRepository.findOrderResumeList(orderNumber, member);
+        List<ResumeDto> resumeDtoList = convertToResumeDto(orderResumeList);
+        return OrderDetailResponse.of(orderResumeList.get(0).getOrder(), resumeDtoList);
     }
 
-    private OrderResponse getOrderResponse(Order order) {
-        List<OrderResume> orderResumeList = orderResumeRepository.findAllByOrder_OrderId(order.getOrderId());
-        return OrderResponse.of(order, orderResumeListToDto(orderResumeList));
-    }
-
-    private List<OrderResumeDto> orderResumeListToDto(List<OrderResume> orderResumeList) {
-        return orderResumeList.stream().map(OrderResume::getResume)
-                .map(OrderResumeDto::from).collect(Collectors.toList());
+    private List<ResumeDto> convertToResumeDto(List<OrderResume> orderResumeList) {
+        if (orderResumeList == null || orderResumeList.isEmpty()) {
+            throw new NotFoundException(ErrorCode.ORDER_NOT_FOUND);
+        }
+        return orderResumeList.stream().map(orderResume -> ResumeDto.from(orderResume.getResume())).toList();
     }
 
     public OrderListResponse getOrderListByMember(Member member) {
@@ -134,5 +140,15 @@ public class OrderService {
                 .collect(Collectors.toList());
         int count = orderList.size();
         return OrderListResponse.of(member.getMemberId(), count, orderList);
+    }
+
+    private OrderResponse getOrderResponse(Order order) {
+        List<OrderResume> orderResumeList = orderResumeRepository.findAllByOrderId(order.getOrderId());
+        return OrderResponse.of(order, orderResumeListToDto(orderResumeList));
+    }
+
+    private List<OrderResumeDto> orderResumeListToDto(List<OrderResume> orderResumeList) {
+        return orderResumeList.stream().map(OrderResume::getResume)
+                .map(OrderResumeDto::from).collect(Collectors.toList());
     }
 }
