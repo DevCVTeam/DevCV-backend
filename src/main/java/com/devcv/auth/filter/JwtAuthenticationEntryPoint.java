@@ -40,8 +40,8 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         }
         // 이외 서버 내부 문제 에러.
         else {
-            log.error(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
-            sendResponse(response, ErrorCode.INTERNAL_SERVER_ERROR);
+            log.error(ErrorCode.UNAUTHORIZED_ERROR.getMessage());
+            sendResponse(response, ErrorCode.UNAUTHORIZED_ERROR);
         }
     }
     private void sendResponse(HttpServletResponse response, ErrorCode exceptionCode) throws IOException {

@@ -1,22 +1,13 @@
 package com.devcv.admin.presentation;
 
 import com.devcv.admin.application.AdminService;
-import com.devcv.admin.dto.AdminResumeList;
 import com.devcv.admin.dto.PaginatedAdminResumeResponse;
-import com.devcv.auth.application.AuthService;
-import com.devcv.auth.exception.JwtInvalidSignException;
-import com.devcv.common.exception.BadRequestException;
-import com.devcv.common.exception.ErrorCode;
 import com.devcv.event.domain.Event;
 import com.devcv.event.domain.dto.EventRequest;
-import com.devcv.member.domain.dto.MemberLoginRequest;
-import com.devcv.member.domain.dto.MemberLoginResponse;
 import com.devcv.resume.application.ResumeService;
 import com.devcv.resume.domain.dto.ResumeDto;
-import com.devcv.resume.domain.dto.ResumeResponse;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
