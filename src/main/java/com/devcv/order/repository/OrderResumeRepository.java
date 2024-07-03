@@ -29,4 +29,11 @@ public interface OrderResumeRepository extends JpaRepository<OrderResume, Long> 
             "WHERE o.orderNumber = :orderNumber " +
             "AND o.member = :member")
     List<OrderResume> findOrderResumeList(@Param("orderNumber") String orderNumber, @Param("member") Member member);
+  
+    // 주문id 조회
+    @Query("SELECT r FROM OrderResume r " +
+            "JOIN r.order o " +
+            "WHERE o.member.memberId = :memberId AND r.resume.resumeId = :resumeId")
+    List<OrderResume> findByMemberIdAndResumeId(@Param("memberId") Long memberId, @Param("resumeId") Long resumeId);
+
 }

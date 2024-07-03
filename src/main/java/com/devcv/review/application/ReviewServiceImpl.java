@@ -5,8 +5,10 @@ import com.devcv.common.exception.UnAuthorizedException;
 import com.devcv.member.domain.Member;
 import com.devcv.member.repository.MemberRepository;
 import com.devcv.order.domain.Order;
+import com.devcv.order.domain.OrderResume;
 import com.devcv.order.exception.OrderNotFoundException;
 import com.devcv.order.repository.OrderRepository;
+import com.devcv.order.repository.OrderResumeRepository;
 import com.devcv.resume.domain.Resume;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
 import com.devcv.resume.exception.MemberNotFoundException;
@@ -43,6 +45,7 @@ public class ReviewServiceImpl implements  ReviewService{
     private final ResumeRepository resumeRepository;
     private final MemberRepository memberRepository;
     private final OrderRepository orderRepository;
+    private final OrderResumeRepository orderResumeRepository;
     private final CommentRepository commentRepository;
 
     private final CommentService commentService;
@@ -112,8 +115,8 @@ public class ReviewServiceImpl implements  ReviewService{
     public Review register(Long resumeId, Long memberId, ReviewDto resumeReviewDto) {
 
         // 주문여부 확인
-        Optional<Order> orderIdOpt = orderRepository.findByMemberIdAndResumeId(memberId, resumeId);
-        if (orderIdOpt.isEmpty()) {
+        List<OrderResume> orderResumes = orderResumeRepository.findByMemberIdAndResumeId(memberId, resumeId);
+        if (orderResumes.isEmpty()) {
             throw new OrderNotFoundException(ErrorCode.ORDER_NOT_FOUND);
         }
 
@@ -125,8 +128,8 @@ public class ReviewServiceImpl implements  ReviewService{
         }
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new MemberNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        Order order = orderIdOpt.get();
-        Long orderId = orderIdOpt.get().getOrderId();
+        Order order = orderResumes.get(0).getOrder();
+        Long orderId = order.getOrderId();
         resumeReviewDto.setResumeId(resumeId);
         resumeReviewDto.setMemberId(memberId);
         resumeReviewDto.setOrderId(orderId);
