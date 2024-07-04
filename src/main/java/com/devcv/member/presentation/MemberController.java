@@ -50,71 +50,16 @@ import java.util.*;
 @PropertySource("classpath:application.yml")
 @RequiredArgsConstructor
 public class MemberController {
-    private final PasswordEncoder passwordEncoder;
+
     private final MemberService memberService;
     private final MailService mailService;
-    private final AuthService authService;
     private final MemberLogRepository memberLogRepository;
     private final JwtProvider jwtProvider;
-    @Value("${keys.jwtkey}")
-    private String jwtkey;
+    private final PasswordEncoder passwordEncoder;
     @Value("${keys.social_password}")
     private String socialPassword;
-    public static final String AUTHORIZATION_HEADER = "Authorization";
-    public static final String AUTHORIZATION_REFRESH_HEADER = "RefreshToken";
-    public static final String BEARER_PREFIX = "Bearer ";
 
-    //----------- login start -----------
-    @PostMapping("/login")
-    public ResponseEntity<MemberLoginResponse> memberLogin(@RequestBody MemberLoginRequest memberLoginRequest) {
-        // JWT 복호화
-        MemberLoginRequest memberLoginRequestAuth = memberLoginRequest.toBuilder()
-                .password(String.valueOf(jwtProvider.parseClaims(memberLoginRequest.getPassword()).get("password"))).build();
-        MemberLoginResponse resultResponse = authService.login(memberLoginRequestAuth);
-        // header.add(AUTHORIZATION_REFRESH_HEADER,BEARER_PREFIX+ resultResponse.getRefreshToken());
-        ResponseCookie responseCookie = ResponseCookie.from("RefreshToken",resultResponse.getRefreshToken())
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(60*60*24*7)
-                .sameSite("None")
-                .build();
-        return ResponseEntity.ok().header(AUTHORIZATION_HEADER,BEARER_PREFIX + resultResponse.getAccessToken())
-                .header(HttpHeaders.SET_COOKIE, String.valueOf(responseCookie)).body(resultResponse);
-    }
-    //----------- login end -----------
-
-    @PostMapping("/logout")
-    public ResponseEntity<String> memberLogout(){
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        Cookie[] cookies = request.getCookies();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if( authentication != null && cookies != null) {
-            SecurityContextHolder.clearContext();
-            for(Cookie cookie : cookies){
-                cookie.setMaxAge(0);
-            }
-        }
-        ResponseCookie responseCookie = ResponseCookie.from("RefreshToken", "")
-                .httpOnly(true)
-                .secure(false)
-                .path("/")
-                .maxAge(60*60*24*7)
-                .sameSite("None")
-                .build();
-        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, String.valueOf(responseCookie)).build();
-    }
-
-    //----------- signup start -----------
-    @PostMapping("/signup")
-    public ResponseEntity<String> signup(@RequestBody MemberSignUpRequest memberSignUpRequest) {
-        // JWT 복호화
-        MemberSignUpRequest memberSignUpRequestAuth = memberSignUpRequest.toBuilder()
-                .password(String.valueOf(jwtProvider.parseClaims(memberSignUpRequest.getPassword()).get("password"))).build();
-        authService.signup(memberSignUpRequestAuth);
-        return ResponseEntity.ok().build();
-    }
-    //----------- mail start -----------
+//-------------------------------------------------------- 이메일인증 start --------------------------------------------------------
     @GetMapping("/cert-email")
     public ResponseEntity<CertificationMailResponse> certEmail(@RequestParam String email) {
         try{
@@ -127,7 +72,8 @@ public class MemberController {
             throw new InternalServerException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
-
+//-------------------------------------------------------- 이메일인증 end --------------------------------------------------------
+//-------------------------------------------------------- 이메일중복확인 start --------------------------------------------------------
     @GetMapping("/duplication-email")
     public ResponseEntity<Object> duplicationEmail(@RequestParam String email) {
         try {
@@ -142,11 +88,9 @@ public class MemberController {
             throw new DuplicationException(ErrorCode.DUPLICATE_ERROR);
         }
     }
+//-------------------------------------------------------- 이메일중복확인 end --------------------------------------------------------
 
-    //----------- mail end -----------
-    //----------- signup end -----------
-
-    //----------- find ID/PW start -----------
+//-------------------------------------------------------- 아이디찾기 start --------------------------------------------------------
     @PostMapping("/find-id")
     public ResponseEntity<MemberFindOfPhoneReponse> findId(@RequestBody MemberFindOfPhoneRequest memberFindOfPhoneRequest) {
         // 아이디 찾기
@@ -170,7 +114,8 @@ public class MemberController {
             throw new NotSignUpException(ErrorCode.FIND_ID_ERROR);
         }
     }
-
+//-------------------------------------------------------- 아이디찾기 end --------------------------------------------------------
+//-------------------------------------------------------- 비밀번호찾기-이메일 start --------------------------------------------------------
     @PostMapping("/find-pw/email")
     public ResponseEntity<MemberFindPwResponse> findPwEmail(@RequestParam String email) {
         // NULL CHECK
@@ -194,6 +139,8 @@ public class MemberController {
             throw new NotSignUpException(ErrorCode.FIND_ID_ERROR);
         }
     }
+//-------------------------------------------------------- 비밀번호찾기-이메일 end --------------------------------------------------------
+//-------------------------------------------------------- 비밀번호찾기-본인인증 start --------------------------------------------------------
     @PostMapping("/find-pw")
     public ResponseEntity<MemberFindOfPhoneReponse> findPwPhone(@RequestBody MemberFindOfPhoneRequest memberFindOfPhoneRequest) {
         // NULL CHECK
@@ -225,10 +172,9 @@ public class MemberController {
             throw new NotSignUpException(ErrorCode.FIND_ID_ERROR);
         }
     }
-    //----------- find ID/PW end -----------
+//-------------------------------------------------------- 비밀번호찾기-본인인증 end --------------------------------------------------------
 
-    //----------- modify member start -----------
-    // 회원 단건 비밀번호 변경
+//-------------------------------------------------------- 비밀번호변경 start --------------------------------------------------------
     @PatchMapping("/{member-id}/password")
     public ResponseEntity<String> modiPassword(@PathVariable("member-id") Long memberId, @RequestBody MemberModifyPasswordRequest memberModifyPasswordRequest){
         // NULL CHECK
@@ -278,7 +224,8 @@ public class MemberController {
             throw new NotMatchMemberIdException(ErrorCode.MEMBERID_ERROR);
         }
     }
-    // 회원정보 단건 조회/수정
+//-------------------------------------------------------- 비밀번호변경 end --------------------------------------------------------
+//-------------------------------------------------------- 회원정보조회 start --------------------------------------------------------
     @GetMapping("{member-id}")
     public ResponseEntity<MemberMypageResponse> getMember(@PathVariable("member-id") Long memberId) {
         try {
@@ -296,6 +243,8 @@ public class MemberController {
             throw new NotMatchMemberIdException(ErrorCode.MEMBERID_ERROR);
         }
     }
+//-------------------------------------------------------- 회원정보조회 end --------------------------------------------------------
+//-------------------------------------------------------- 회원정보수정 start --------------------------------------------------------
     @PutMapping("/{member-id}")
     public ResponseEntity<String> modifyMember(@RequestBody MemberModifyAllRequest memberModifyAllRequest, @PathVariable("member-id") Long memberId) {
         // NULL CHECK
@@ -383,135 +332,9 @@ public class MemberController {
             throw new NotMatchMemberIdException(ErrorCode.MEMBERID_ERROR);
         }
     }
-    //----------- modi member end -----------
+//-------------------------------------------------------- 회원정보수정 end --------------------------------------------------------
 
-
-    //----------- Social start -----------
-    //----------- KaKao Auth start -----------
-    @GetMapping("/kakao-login")
-    public ResponseEntity<Object> memberAuthKakao(@RequestParam String token){
-        ObjectMapper objectMapper = new ObjectMapper();
-        RestTemplate restTemplateInfo = new RestTemplate();
-        HttpHeaders headersInfo = new HttpHeaders();
-        headersInfo.add("Authorization", "Bearer " + token);
-        headersInfo.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        HttpEntity<MultiValueMap<String, String>> kakaoProfileRequest = new HttpEntity<>(headersInfo);
-
-        // Http POST && Response
-        ResponseEntity<String> responseInfo = restTemplateInfo.exchange("https://kapi.kakao.com/v2/user/me", HttpMethod.POST,
-                kakaoProfileRequest, String.class
-        );
-
-        // KaKaoProfile 객체
-        KakaoProfile profile;
-        try {
-            profile = objectMapper.readValue(responseInfo.getBody(), KakaoProfile.class);
-        } catch (JsonProcessingException e) {
-            e.fillInStackTrace();
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-
-        // 이미 가입되어 있는 이메일이면 해당 이메일로 로그인
-        Member findMember = memberService.findMemberByEmail(profile.getKakao_account().getEmail());
-        if(findMember != null){
-            // 해당 소셜 이메일이 이미 일반계정으로 가입되어 있는 경우
-            if(!passwordEncoder.matches(socialPassword, findMember.getPassword())){
-                throw new SocialLoginException(ErrorCode.SOCIAL_LOGIN_ERROR);
-            }
-            // 로그인 진행
-            MemberLoginRequest memberLoginRequest =MemberLoginRequest.builder().email(profile.getKakao_account().getEmail()).password(socialPassword).build();
-            MemberLoginResponse memberLoginResponse = authService.login(memberLoginRequest);
-            ResponseCookie responseCookie = ResponseCookie.from("RefreshToken", memberLoginResponse.getRefreshToken())
-                    .httpOnly(true)
-                    .secure(false)
-                    .path("/")
-                    .maxAge(60*60*24*7)
-                    .sameSite("None")
-                    .build();
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,String.valueOf(responseCookie)).body(memberLoginResponse);
-        } else { // 가입되어있지 않는 이메일이면 회원가입페이지로 이메일 정보 넘김.
-            long now = (new Date()).getTime();
-            Map<String,Object> userInfo = new HashMap<>(){{
-                put("nickName",profile.getProperties().getNickname());
-                put("email",profile.getKakao_account().getEmail());
-                put("social",SocialType.kakao.name());
-                put("accessToken", Jwts.builder()
-                        .claim("nickName",profile.getProperties().getNickname())
-                        .claim("email",profile.getKakao_account().getEmail())
-                        .claim("social",SocialType.kakao.name())
-                        .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtkey)), SignatureAlgorithm.HS512)
-                        .setExpiration(new Date(now + 1000 * 60 * 3)) // 3분
-                        .compact());
-            }};
-            return ResponseEntity.ok().body(userInfo);
-        }
-    }
-    //----------- KaKao Auth end -----------
-
-    //----------- Google Auth start -----------
-    @GetMapping("/google-login")
-    public ResponseEntity<Object> memberAuthGoogle(@RequestParam String token){
-
-        RestTemplate restTemplateInfo = new RestTemplate();
-        HttpHeaders headersInfo = new HttpHeaders();
-        headersInfo.add("Authorization", "Bearer " + token);
-        headersInfo.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-        HttpEntity<MultiValueMap<String, String>> googleProfileRequest = new HttpEntity<>(headersInfo);
-
-        // Http POST && Response
-        ResponseEntity<String> responseInfo = restTemplateInfo.exchange("https://www.googleapis.com/userinfo/v2/me", HttpMethod.GET,
-                googleProfileRequest, String.class
-        );
-        ObjectMapper objectMapper = new ObjectMapper();
-        GoogleProfile googleProfile;
-        try {
-            googleProfile = objectMapper.readValue(responseInfo.getBody(), GoogleProfile.class);
-        } catch (JsonProcessingException e) {
-            e.fillInStackTrace();
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-
-        // 이미 가입되어 있는 이메일이면 해당 이메일로 로그인
-        Member findMember = memberService.findMemberByEmail(googleProfile.getEmail());
-        if(findMember != null){
-            // 해당 소셜 이메일이 이미 일반계정으로 가입되어 있는 경우
-            if(!passwordEncoder.matches(socialPassword, findMember.getPassword())){
-                throw new SocialLoginException(ErrorCode.SOCIAL_LOGIN_ERROR);
-            }
-            // 로그인 진행.
-            MemberLoginRequest memberLoginRequest = MemberLoginRequest.builder()
-                    .email(googleProfile.getEmail()).password(socialPassword).build();
-            MemberLoginResponse memberLoginResponse = authService.login(memberLoginRequest);
-            ResponseCookie responseCookie = ResponseCookie.from("RefreshToken", memberLoginResponse.getRefreshToken())
-                    .httpOnly(true)
-                    .secure(false)
-                    .path("/")
-                    .maxAge(60*60*24*7)
-                    .sameSite("None")
-                    .build();
-            return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,String.valueOf(responseCookie)).body(memberLoginResponse);
-        } else { // 가입되어있지 않는 이메일이면 회원가입페이지로 이메일 정보 넘김.
-            long now = (new Date()).getTime();
-            Map<String,Object> userInfo = new HashMap<>(){{
-                put("nickName",googleProfile.getName());
-                put("email",googleProfile.getEmail());
-                put("social",SocialType.google.name());
-                put("accessToken", Jwts.builder()
-                        .claim("nickName",googleProfile.getName())
-                        .claim("email",googleProfile.getEmail())
-                        .claim("social",SocialType.google.name())
-                        .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtkey)), SignatureAlgorithm.HS512)
-                        .setExpiration(new Date(now + 1000 * 60 * 3)) // 3분
-                        .compact());
-            }};
-            return ResponseEntity.ok().body(userInfo);
-        }
-    }
-    //----------- Google Auth end -----------
-    //----------- Social end -----------
-
-    //----------- GetClientIP start -----------
+//-------------------------------------------------------- getIP start --------------------------------------------------------
     public static String getIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip == null) {
@@ -531,47 +354,6 @@ public class MemberController {
         }
         return ip;
     }
-    //----------- GetClientIP end -----------
+//-------------------------------------------------------- getIP end --------------------------------------------------------
 
-    @GetMapping("/refresh-token")
-    @CrossOrigin(origins = "*", allowedHeaders = "*")
-    public ResponseEntity<Map<String,Object>> refreshAccessToken(@CookieValue(value = "RefreshToken", required = false) Cookie refreshTokenCookie) {
-        try {
-            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-            String accessToken = request.getHeader(AUTHORIZATION_HEADER).split(" ")[1];
-            if (StringUtils.hasText(refreshTokenCookie.getValue())) {
-                // refreshToken 유효성검사.
-                if (jwtProvider.validateToken(refreshTokenCookie.getValue()) && !jwtProvider.validateToken(accessToken)) {
-                    // 검사완료되면 accessToken 재발급 jwtProvider.refreshTokenDto
-                    String email = String.valueOf(jwtProvider.parseClaims(refreshTokenCookie.getValue()).get("email"));
-                    JwtTokenDto jwtTokenDto = jwtProvider.refreshTokenDto(email, refreshTokenCookie.getValue());
-                    // RefreshToken Cookie에 담기.
-                    ResponseCookie responseCookie = ResponseCookie.from(AUTHORIZATION_REFRESH_HEADER, refreshTokenCookie.getValue())
-                            .httpOnly(true)
-                            .secure(false)
-                            .path("/")
-                            .domain("ec2-100-26-178-217.compute-1.amazonaws.com")
-                            .maxAge(60*60*24*7)
-                            .sameSite("None")
-                            .build();
-                    // AccessToken body에 담아 응답.
-                    Map<String, Object> accessTokenInfo = new HashMap<>() {{
-                        put("accessToken", jwtTokenDto.getAccessToken());
-                    }};
-                    return ResponseEntity.ok().header(AUTHORIZATION_HEADER, BEARER_PREFIX + jwtTokenDto.getAccessToken())
-                            .header(HttpHeaders.SET_COOKIE, responseCookie.toString()).body(accessTokenInfo);
-                } else {
-                    throw new JwtNotExpiredException(ErrorCode.JWT_NOT_EXPIRED_ERROR);
-                }
-            } else {
-                throw new JwtNotFoundRefreshTokenException(ErrorCode.REFRESHTOKEN_NOT_FOUND);
-            }
-        } catch (NullPointerException | JwtNotFoundRefreshTokenException e){
-            e.fillInStackTrace();
-            throw new JwtNotFoundRefreshTokenException(ErrorCode.REFRESHTOKEN_NOT_FOUND);
-        } catch (JwtNotExpiredException e){
-            e.fillInStackTrace();
-            throw new JwtNotExpiredException(ErrorCode.JWT_NOT_EXPIRED_ERROR);
-        }
-    }
 }

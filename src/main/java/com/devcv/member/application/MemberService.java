@@ -67,4 +67,8 @@ public class MemberService {
                                             String company, String job, String stack, Long memberId){
         return memberRepository.updateSocialMemberBymemberId(memberName,nickname,phone,address,company,job,stack,memberId);
     }
+    @Transactional
+    public int updateRefreshTokenBymemberId(Long memberId, String refreshToken){
+        return memberRepository.updateRefreshTokenBymemberId(memberId,refreshToken);
+    }
 }
