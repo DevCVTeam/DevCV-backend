@@ -259,9 +259,9 @@ public class AuthController {
         try {
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
             String accessToken = request.getHeader(AUTHORIZATION_HEADER).split(" ")[1];
-            MemberDetails memberDetails = (MemberDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-            Member findMember = memberService.findMemberBymemberId(memberDetails.getMember().getMemberId());
             if (StringUtils.hasText(refreshTokenCookie.getValue())) {
+                String findEmail = String.valueOf(jwtProvider.parseClaims(refreshTokenCookie.getValue()).get("email"));
+                Member findMember = memberService.findMemberByEmail(findEmail);
                 // refreshToken 유효성검사.
                 if (jwtProvider.validateToken(refreshTokenCookie.getValue()) && !jwtProvider.validateToken(accessToken)
                 && refreshTokenCookie.getValue().equals(findMember.getRefreshToken())) {
