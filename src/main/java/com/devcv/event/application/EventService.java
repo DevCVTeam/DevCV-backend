@@ -18,7 +18,7 @@ public class EventService {
     private final EventRepository eventRepository;
 
     public Event findByEventId(Long eventId) {
-        return eventRepository.findById(eventId)
+        return eventRepository.findEventByIdAndIsDeletedFalse(eventId)
                 .orElseThrow(() -> new NotFoundException(ErrorCode.EVENT_NOT_FOUND));
     }
 
@@ -27,7 +27,7 @@ public class EventService {
     }
 
     public EventListResponse getEventListResponse() {
-        List<EventResponse> eventResponseList = eventRepository.findAll()
+        List<EventResponse> eventResponseList = eventRepository.findEventListByIsDeletedFalse()
                 .stream()
                 .map(EventResponse::from)
                 .toList();

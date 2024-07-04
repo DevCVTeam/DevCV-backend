@@ -34,6 +34,12 @@ public class Event extends BaseTimeEntity {
     @Column
     private LocalDateTime endDate;
 
+    @Column
+    private Boolean isDeleted;
+
+    @Column
+    private LocalDateTime deletedDate;
+
     private Event(String name, String eventCategory, Long point, LocalDateTime startDate, LocalDateTime endDate) {
         this.id = null;
         this.name = name;
@@ -41,6 +47,8 @@ public class Event extends BaseTimeEntity {
         this.point = point;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.isDeleted = false;
+        this.deletedDate = null;
     }
 
     public static Event of(String name, String eventCategory, Long point, LocalDateTime startDate, LocalDateTime endDate) {
@@ -51,5 +59,10 @@ public class Event extends BaseTimeEntity {
         LocalDateTime currentDate = LocalDateTime.now();
         return (currentDate.isEqual(startDate) || currentDate.isAfter(startDate)) &&
                 (currentDate.isEqual(endDate) || currentDate.isBefore(endDate));
+    }
+
+    public void delete() {
+        this.isDeleted = true;
+        this.deletedDate = LocalDateTime.now();
     }
 }
