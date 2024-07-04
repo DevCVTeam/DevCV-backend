@@ -7,6 +7,7 @@ import com.devcv.event.domain.dto.EventRequest;
 import com.devcv.resume.application.ResumeService;
 import com.devcv.resume.domain.dto.ResumeDto;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,6 @@ import java.net.URI;
 @AllArgsConstructor
 public class AdminController {
 
-    private final ResumeService resumeService;
     private final AdminService adminService;
 
     // 이력서 상태 변경
@@ -53,7 +53,7 @@ public class AdminController {
     }
 
     @PostMapping("/events")
-    public ResponseEntity<Object> createEvent(@RequestBody EventRequest eventRequest) {
+    public ResponseEntity<Object> createEvent(@RequestBody @Valid EventRequest eventRequest) {
         Event event = adminService.createEvent(eventRequest);
         return ResponseEntity.created(URI.create(String.valueOf(event.getId()))).build();
     }

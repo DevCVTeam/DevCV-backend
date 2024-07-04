@@ -35,8 +35,8 @@ public class AdminService {
     private final ResumeRepository resumeRepository;
 
     public Event createEvent(EventRequest eventRequest) {
-        Event event = Event.of(eventRequest.name(), eventRequest.eventCategory(), eventRequest.startDate()
-                , eventRequest.endDate());
+        Event event = Event.of(eventRequest.name(), eventRequest.eventCategory(), eventRequest.point(),
+                eventRequest.startDate(), eventRequest.endDate());
         return eventRepository.save(event);
     }
 
