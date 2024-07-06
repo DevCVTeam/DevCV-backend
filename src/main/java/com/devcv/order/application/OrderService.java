@@ -28,7 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final static String DESCRIPTION = "상품 구매 - 주문번호:";
+    private final static String DESCRIPTION = "이력서 구매 - 주문번호:";
+    private final static String COMMISSION_DESCRIPTION = "이력서 판매 적립 - 주문번호:";
 
     private final OrderRepository orderRepository;
     private final ResumeRepository resumeRepository;
@@ -60,6 +61,8 @@ public class OrderService {
         for (CartDto dto : cartOrderRequest.cartList()) {
             Resume resume = getResume(dto.resumeId());
             validateResume(resume, dto, existingResumeIdList);
+            pointService.savePoint(member, (long) (resume.getPrice() * 0.1),
+                    COMMISSION_DESCRIPTION + order.getOrderNumber());
             OrderResume orderResume = OrderResume.of(order, resume);
             orderResumeList.add(orderResume);
         }
