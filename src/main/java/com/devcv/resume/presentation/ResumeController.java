@@ -7,6 +7,7 @@ import com.devcv.resume.application.ResumeService;
 import com.devcv.resume.domain.Resume;
 import com.devcv.resume.domain.dto.PaginatedResumeResponse;
 import com.devcv.resume.domain.dto.ResumeDto;
+import com.devcv.resume.domain.dto.ResumeListResponse;
 import com.devcv.resume.domain.dto.ResumeRequest;
 import com.devcv.resume.domain.enumtype.CompanyType;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
@@ -60,7 +61,6 @@ public class ResumeController {
     //------------이력서 상세 조회 요청 end---------------
 
 
-
     // -------이력서 승인대기 요청 start-------------
     @PostMapping("/resumes")
     public ResponseEntity<ResumeDto> registerResume(
@@ -82,14 +82,28 @@ public class ResumeController {
     //----------이력서 승인대기 요청 end---------------
 
 
-    //----------이력서 판매 상세 내역 페이지 호출 start---------
-    @GetMapping("/members/{member-id}/resumes/{resume-id}")
-    public ResponseEntity<?> getResumeForEdit(
-            @AuthenticationPrincipal UserDetails userDetails, @PathVariable("resume-id") Long resumeId) {
-        if(userDetails == null) {
+    //------------마이페이지 이력서 판매내역 조회 요청 start---------------
+    @GetMapping("/members/{member-id}/resumes")
+    public ResponseEntity<ResumeListResponse> getResumeListResponse(@AuthenticationPrincipal UserDetails userDetails,
+                                                                   @PathVariable("member-id") Long memberId) {
+        if(userDetails == null || !memberId.equals(Long.valueOf(userDetails.getUsername()))) {
             throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
         }
-        Long memberId = Long.valueOf(userDetails.getUsername());
+        return ResponseEntity.ok().body(resumeService.findResumesByMemberId(memberId));
+    }
+    //------------마이페이지 이력서 판매내역 조회 요청 end---------------
+
+
+
+    //----------마이페이지 이력서 판매 상세 내역 페이지 호출 start---------
+    @GetMapping("/members/{member-id}/resumes/{resume-id}")
+    public ResponseEntity<?> getResumeForEdit(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable("member-id") Long memberId,
+            @PathVariable("resume-id") Long resumeId) {
+        if(userDetails == null || !memberId.equals(Long.valueOf(userDetails.getUsername()))) {
+            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        }
         ResumeDto resumeDetail = resumeService.getRegisterResumeDetail(memberId, resumeId);
 
         // 삭제한 이력서 호출 시 접근 예외처리
@@ -99,7 +113,7 @@ public class ResumeController {
 
         return ResponseEntity.ok().body(resumeDetail);
     }
-    //----------이력서 판매 상세 내역 페이지 페이지 호출 end-----------
+    //----------마이페이지 이력서 판매 상세 내역 페이지 페이지 호출 end-----------
 
 
     //----------이력서 판매 등록 요청 start----------------

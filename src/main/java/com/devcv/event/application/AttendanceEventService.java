@@ -2,7 +2,6 @@ package com.devcv.event.application;
 
 import com.devcv.common.exception.BadRequestException;
 import com.devcv.common.exception.ErrorCode;
-import com.devcv.common.exception.TestErrorException;
 import com.devcv.event.domain.AttendanceEvent;
 import com.devcv.event.domain.Event;
 import com.devcv.event.domain.dto.AttendanceListResponse;
@@ -22,8 +21,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AttendanceEventService {
-
-    private final static Long ATTENDANCE_POINT = 1000L;
 
     private final AttendanceEventRepository attendanceEventRepository;
     private final PointService pointService;
@@ -61,7 +58,7 @@ public class AttendanceEventService {
     }
 
     private void savePoint(Member member, Event event) {
-        pointService.savePoint(member, ATTENDANCE_POINT, event.getName());
+        pointService.savePoint(member, event.getPoint(), event.getName());
     }
 
     public AttendanceListResponse getAttendanceListResponse(Long memberId, Long eventId) {

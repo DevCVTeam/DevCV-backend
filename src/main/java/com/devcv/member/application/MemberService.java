@@ -6,6 +6,9 @@ import com.devcv.member.exception.NotSignUpException;
 import com.devcv.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /*
 *   ********************************* MemberService 하위 메서드 기능 정리 *********************************
@@ -48,17 +51,24 @@ public class MemberService {
             throw new NotSignUpException(ErrorCode.MEMBER_NOT_FOUND);
         }
     }
-    public Member findMemberBymemberNameAndPhone(String memberName, String phone) {
+    public List<Member> findMemberBymemberNameAndPhone(String memberName, String phone) {
         return memberRepository.findMemberBymemberNameAndPhone(memberName,phone);
     }
+    @Transactional
     public int updatePasswordBymemberId(String password,Long memberId) {
         return memberRepository.updatePasswordBymemberId(password,memberId);
     }
+    @Transactional
     public int updateMemberBymemberId(String memberName, String email, String password, String nickname, String phone, String address,
                                       String company, String job, String stack, Long memberId) {
         return memberRepository.updateMemberBymemberId(memberName,email,password,nickname,phone,address,company,job,stack,memberId);}
+    @Transactional
     public int updateSocialMemberBymemberId(String memberName, String nickname, String phone, String address,
                                             String company, String job, String stack, Long memberId){
         return memberRepository.updateSocialMemberBymemberId(memberName,nickname,phone,address,company,job,stack,memberId);
+    }
+    @Transactional
+    public int updateRefreshTokenBymemberId(Long memberId, String refreshToken){
+        return memberRepository.updateRefreshTokenBymemberId(memberId,refreshToken);
     }
 }

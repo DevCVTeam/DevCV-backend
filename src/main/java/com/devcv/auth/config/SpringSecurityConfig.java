@@ -2,7 +2,6 @@ package com.devcv.auth.config;
 
 import com.devcv.auth.filter.JwtAccessDeniedHandler;
 import com.devcv.auth.filter.JwtAuthenticationEntryPoint;
-import com.devcv.auth.filter.JwtFilter;
 import com.devcv.auth.jwt.JwtProvider;
 import com.devcv.member.domain.enumtype.RoleType;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +14,6 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.CorsFilter;
 
 @Configuration
@@ -23,7 +21,6 @@ import org.springframework.web.filter.CorsFilter;
 @RequiredArgsConstructor
 public class SpringSecurityConfig {
 
-    private final JwtFilter jwtFilter;
     private final JwtProvider jwtProvider;
     private final CorsFilter corsFilter;
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -40,7 +37,6 @@ public class SpringSecurityConfig {
         http.csrf().disable()
                 // CORS 설정
                 .addFilterBefore(corsFilter, CorsFilter.class)
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 // exception handling
                 .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
@@ -60,7 +56,7 @@ public class SpringSecurityConfig {
                 .and()
                 .authorizeHttpRequests()
                 .requestMatchers("/members/login","/members/signup","/members/find-id","/members/cert-email","/members/duplication-email",
-                        "/members/find-pw/email","/members/find-pw","/members/{member-id}/password","/admin/login",
+                        "/members/find-pw/email","/members/find-pw","/members/{member-id}/password","/admin/login","/members/refresh-token",
                          "/members/kakao-login","/members/google-login","/resumes","/resumes/{resume-id}", "/resumes/{resume-id}/reviews").permitAll()
 //                .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .requestMatchers("/admin/**").hasRole(RoleType.admin.name()) // 관리자 페이지

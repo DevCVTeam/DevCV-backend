@@ -63,7 +63,7 @@ public class AuthService {
         try{
             if(member.getMemberName() == null || member.getNickName() == null || member.getEmail() == null
                 || member.getPassword() == null || member.getPhone() == null || member.getAddress() == null
-                || member.getSocial() == null || member.getJob() == null || member.getCompany() == null || member.getStack() == null){
+                || member.getSocial() == null){
                 throw new NotNullException(ErrorCode.NULL_ERROR);
             } else {
                 memberRepository.save(member);
@@ -88,10 +88,11 @@ public class AuthService {
             // 3. 인증 정보를 기반으로 JWT 토큰 생성
             JwtTokenDto tokenDto = jwtProvider.generateTokenDto(authentication);
             // 4. RefreshToken 저장
-            RefreshToken.builder()
+            RefreshToken refreshToken = RefreshToken.builder()
                     .key(authentication.getName())
                     .value(tokenDto.getRefreshToken())
                     .build();
+            memberRepository.updateRefreshTokenBymemberId(memberDetails.getMember().getMemberId(), refreshToken.getValue());
             // memberLoginLog save
             memberLogRepository.save(MemberLog.builder().logLoginDate(LocalDateTime.now())
                     .logEmail(memberLoginRequest.getEmail())

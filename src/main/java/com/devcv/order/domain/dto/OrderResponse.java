@@ -2,27 +2,23 @@ package com.devcv.order.domain.dto;
 
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.OrderStatus;
-import com.devcv.order.domain.PayType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 
-public record OrderResponse(String orderId,
-                            String resumeTitle,
-                            int totalAmount,
+public record OrderResponse(String orderNumber,
+                            Long totalPrice,
                             OrderStatus orderStatus,
                             LocalDateTime createdDate,
-                            PayType payType,
-                            String sellerName) {
+                            List<OrderResumeDto> resumeList) {
 
-    public static OrderResponse from(Order order) {
+    public static OrderResponse of(Order order, List<OrderResumeDto> orderResumeDtoList) {
         return new OrderResponse(
-                order.getOrderId(),
-                order.getResume().getTitle(),
-                order.getTotalAmount(),
+                order.getOrderNumber(),
+                order.getTotalPrice(),
                 order.getOrderStatus(),
                 order.getCreatedDate(),
-                order.getPayType(),
-                order.getSellerName());
+                orderResumeDtoList);
     }
 }

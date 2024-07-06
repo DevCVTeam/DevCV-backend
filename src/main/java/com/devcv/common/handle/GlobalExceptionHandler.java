@@ -1,10 +1,9 @@
-package com.devcv.common.exception;
+package com.devcv.common.handle;
 
-import com.devcv.auth.exception.JwtExpiredException;
-import com.devcv.auth.exception.JwtIllegalArgumentException;
-import com.devcv.auth.exception.JwtInvalidSignException;
-import com.devcv.auth.exception.JwtUnsupportedException;
+import com.devcv.auth.exception.*;
+import com.devcv.common.exception.*;
 import com.devcv.common.exception.dto.ErrorResponse;
+import com.devcv.common.exception.dto.ValidErrorResponse;
 import com.devcv.member.exception.*;
 import com.devcv.resume.exception.*;
 import com.devcv.member.exception.AuthLoginException;
@@ -19,6 +18,7 @@ import org.hibernate.PropertyValueException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MultipartException;
@@ -28,30 +28,48 @@ import org.springframework.web.multipart.MultipartException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 500 start
-    @ExceptionHandler(InternalServerException.class)
-    public ResponseEntity<ErrorResponse> handle(InternalServerException e) {
+    // 400
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handle(HttpMessageNotReadableException e) {
         log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.from(ErrorCode.EMPTY_VALUE_ERROR));
     }
 
-    @ExceptionHandler(TestErrorException.class)
-    public ResponseEntity<ErrorResponse> handle(TestErrorException e) {
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ErrorResponse> handle(BadRequestException e) {
         log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.from(ErrorCode.TEST_ERROR));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e));
     }
 
-    @ExceptionHandler(ResumeStatusException.class)
-    public ResponseEntity<ErrorResponse> handle(ResumeStatusException e) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(NotFoundException e) {
         log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ErrorResponse.from(ErrorCode.RESUME_NOT_APPROVAL));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e));
     }
-    // 500 end
 
-    // 401 start
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ErrorResponse> handle(MultipartException e) {
+        log.error(e.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.from(ErrorCode.FILE_SIZE_LIMIT_EXCEEDED));
+    }
+
+    @ExceptionHandler(FileNameLengthExceededException.class)
+    public ResponseEntity<ErrorResponse> handle(FileNameLengthExceededException e) {
+        log.error(e.getMessage());
+        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.from(ErrorCode.FILE_NAME_LENGTH_EXCEEDED));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    protected ResponseEntity<Object> handle(MethodArgumentNotValidException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ValidErrorResponse.from(e));
+    }
+
+    // 401
     @ExceptionHandler(UnAuthorizedException.class)
     public ResponseEntity<ErrorResponse> handle(UnAuthorizedException e) {
         log.error(e.getMessage());
@@ -118,7 +136,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ErrorResponse.from(ErrorCode.SOCIAL_LOGIN_ERROR));
     }
-    // 401 end
+    @ExceptionHandler(JwtNotExpiredException.class)
+    public ResponseEntity<ErrorResponse> handle(JwtNotExpiredException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.from(ErrorCode.JWT_NOT_EXPIRED_ERROR));
+    }
+    @ExceptionHandler(NotMatchMemberIdException.class)
+    public ResponseEntity<ErrorResponse> handle(NotMatchMemberIdException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.from(ErrorCode.MEMBERID_ERROR));
+    }
 
     // 403
     @ExceptionHandler(ForbiddenException.class)
@@ -126,9 +155,8 @@ public class GlobalExceptionHandler {
         log.error(e.getMessage());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ErrorResponse.from(e));
     }
-    // 403
 
-    // 404 start
+    // 404
     @ExceptionHandler(NotNullException.class)
     public ResponseEntity<ErrorResponse> handle(NotNullException e) {
         log.error(e.getMessage());
@@ -174,44 +202,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(ErrorResponse.from(ErrorCode.RESUME_NOT_EXIST));
     }
-    // 404 end
 
-    // 400 start
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handle(HttpMessageNotReadableException e) {
+    @ExceptionHandler(JwtNotFoundRefreshTokenException.class)
+    public ResponseEntity<ErrorResponse> handle(JwtNotFoundRefreshTokenException e) {
         log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.from(ErrorCode.EMPTY_VALUE_ERROR));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponse.from(ErrorCode.REFRESHTOKEN_NOT_FOUND));
     }
-
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ErrorResponse> handle(BadRequestException e) {
-        log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e));
-    }
-
-    @ExceptionHandler(NotFoundException.class)
-    public ResponseEntity<ErrorResponse> handle(NotFoundException e) {
-        log.error(e.getMessage());
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErrorResponse.from(e));
-    }
-
-    @ExceptionHandler(MultipartException.class)
-    public ResponseEntity<ErrorResponse> handle(MultipartException e) {
-        log.error(e.getMessage());
-        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.from(ErrorCode.FILE_SIZE_LIMIT_EXCEEDED));
-    }
-
-    @ExceptionHandler(FileNameLengthExceededException.class)
-    public ResponseEntity<ErrorResponse> handle(FileNameLengthExceededException e) {
-        log.error(e.getMessage());
-        return  ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.from(ErrorCode.FILE_NAME_LENGTH_EXCEEDED));
-    }
-
-    // 400 end
-
 
     // 409 start
     @ExceptionHandler(AlreadyExistsException.class)
@@ -220,9 +217,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErrorResponse.from(e));
     }
-    // 409 end
 
-
+    // s3
     @ExceptionHandler(S3Exception.class)
     public ResponseEntity<ErrorResponse>handle(S3Exception e) {
         System.out.println("s3 upload error");
@@ -246,5 +242,27 @@ public class GlobalExceptionHandler {
         }
         return ResponseEntity.status(status)
                 .body(ErrorResponse.from(errorCode));
+    }
+
+    // 500 start
+    @ExceptionHandler(TestErrorException.class)
+    public ResponseEntity<ErrorResponse> handle(TestErrorException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.from(ErrorCode.TEST_ERROR));
+    }
+
+    @ExceptionHandler(ResumeStatusException.class)
+    public ResponseEntity<ErrorResponse> handle(ResumeStatusException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.from(ErrorCode.RESUME_NOT_APPROVAL));
+    }
+
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponse> handle(InternalServerException e) {
+        log.error(e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.from(ErrorCode.INTERNAL_SERVER_ERROR));
     }
 }

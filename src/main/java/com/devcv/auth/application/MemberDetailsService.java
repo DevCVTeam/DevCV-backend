@@ -23,7 +23,6 @@ import java.util.List;
 public class MemberDetailsService implements UserDetailsService {
     private final MemberRepository memberRepository;
     @Override
-    @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         try {
             Member findMember =  memberRepository.findMemberByEmail(username);

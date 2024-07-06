@@ -33,8 +33,9 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
     Page<Object[]> findByStatus(ResumeStatus status, Pageable pageable);
 
     // 회원별 이력서 조회
-    @Query("SELECT rm FROM Resume rm WHERE rm.member.memberId=:memberId")
+    @Query("SELECT rm FROM Resume rm WHERE rm.member.memberId = :memberId AND rm.delFlag = false")
     List<Resume> findByMember(Long memberId);
+
     // 직무 & 회사별 이력서 조회
     @Query("SELECT rm, AVG(COALESCE(rv.grade, 0)), COUNT(rv) " +
             "FROM Resume rm LEFT JOIN Review rv ON rv.resume = rm " +
@@ -86,7 +87,4 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
     @Query("UPDATE Resume r set r.delFlag = :flag where r.resumeId = :resumeId")
     void updateToDelete(Long resumeId, boolean flag);
 
-    @Modifying
-    @Query("UPDATE Resume r set r.status = :status where r.resumeId = :resumeId")
-    int updateByresumeId(Long resumeId, ResumeStatus status);
 }

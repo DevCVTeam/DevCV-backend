@@ -5,9 +5,9 @@ import lombok.Getter;
 @Getter
 public enum OrderStatus {
 
-    CREATED("주문생성완료"),
-    PENDING_PAYMENT("결제대기"),
-    COMPLETED("구매완료");
+    PENDING("결제대기"),
+    COMPLETED("결제완료"),
+    CANCELLED("취소");
 
     private final String status;
 

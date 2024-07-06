@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -120,17 +119,6 @@ public class ResumeServiceImpl implements ResumeService {
         return entityToDto(resume, averageGrade, reviewCount, false);
     }
 
-    // 회원별 이력서 조회
-
-    @Override
-    public ResumeListResponse findResumesByMemberId(Long memberId) {
-        List<ResumeResponse> resumeList = resumeRepository.findByMember(memberId).
-                stream()
-                .map(ResumeResponse::from)
-                .collect(Collectors.toList());;
-        return ResumeListResponse.of(memberId,resumeList.size(),resumeList);
-    }
-
     // 이력서 등록(승인대기)
     @Override
     public Resume register(ResumeRequest resumeRequest, MultipartFile resumeFile, List<MultipartFile> images, Long memberId) {
@@ -200,6 +188,16 @@ public class ResumeServiceImpl implements ResumeService {
 
     }
 
+    // 회원별 이력서 조회
+    @Override
+    public ResumeListResponse findResumesByMemberId(Long memberId) {
+        List<ResumeResponse> resumeList = resumeRepository.findByMember(memberId).
+                stream()
+                .map(ResumeResponse::from)
+                .collect(Collectors.toList());;
+        return ResumeListResponse.of(memberId,resumeList.size(),resumeList);
+    }
+
     // 이력서 판매내역 상세조회
     @Override
     public ResumeDto getRegisterResumeDetail(Long memberId, Long resumeId) {
@@ -222,7 +220,7 @@ public class ResumeServiceImpl implements ResumeService {
         Optional<Resume> resumeOpt = resumeRepository.findByIdAndMemberId(resumeId, memberId);
         if (resumeOpt.isPresent()) {
             Resume resume = resumeOpt.get();
-            if (resume.getStatus() == ResumeStatus.pending) {
+            if (resume.getStatus() == ResumeStatus.pending || resume.getStatus() == ResumeStatus.modified) {
                 throw new ResumeStatusException(ErrorCode.RESUME_NOT_APPROVAL);
             }
             if (resume.getStatus() == ResumeStatus.deleted) {
@@ -270,7 +268,7 @@ public class ResumeServiceImpl implements ResumeService {
             resume.changeContent(resumeDto.getContent());
             resume.changePrice(resumeDto.getPrice());
             resume.changeStack(resumeDto.getStack());
-            resume.setStatus(ResumeStatus.pending);
+            resume.setStatus(ResumeStatus.modified);
 
 
             // 현재 상태를 로그로 저장
@@ -361,11 +359,5 @@ public class ResumeServiceImpl implements ResumeService {
         } else {
             throw new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND);
         }
-    }
-
-    @Override
-    public int updateStatus(Long resumeId, ResumeStatus resumeStatus) {
-        saveResumeLog(findByResumeId(resumeId), resumeStatus);
-        return resumeRepository.updateByresumeId(resumeId,resumeStatus);
     }
 }

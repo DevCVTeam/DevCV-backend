@@ -14,6 +14,7 @@ import com.devcv.member.repository.MemberRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -146,19 +147,9 @@ public class JwtProvider {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            log.error("잘못된 JWT 서명입니다.");
-            throw new JwtInvalidSignException(ErrorCode.JWT_INVALID_SIGN_ERROR);
-        } catch (ExpiredJwtException e) {
+        }  catch (ExpiredJwtException e) {
             log.error("만료된 JWT 토큰입니다.");
             return false;
-//            throw new JwtExpiredException(ErrorCode.JWT_EXPIRED_ERROR);
-        } catch (UnsupportedJwtException e) {
-            log.error("지원되지 않는 JWT 토큰입니다.");
-            throw new JwtUnsupportedException(ErrorCode.JWT_UNSUPPORTED_ERROR);
-        } catch (IllegalArgumentException e) {
-            log.error("JWT 토큰이 잘못되었습니다.");
-            throw new JwtIllegalArgumentException(ErrorCode.JWT_ILLEGALARGUMENT_ERROR);
         }
     }
 
@@ -178,6 +169,7 @@ public class JwtProvider {
     }
     public String resolveRefreshToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_REFRESH_HEADER);
+        System.out.println(Arrays.toString(request.getCookies()));
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
             return bearerToken.split(" ")[1].trim();
         }

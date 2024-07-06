@@ -23,7 +23,7 @@ public class ReviewDto {
     private Long memberId;
     private String reviewerNickname;
 
-    private String orderId;
+    private Long orderId;
 
     private int grade;
 

@@ -5,9 +5,9 @@ import com.devcv.resume.domain.enumtype.ResumeStatus;
 
 import java.util.List;
 
-public record AdminResumeList(ResumeStatus status, int count, List<ResumeResponse> resumeList) {
+public record AdminResumeList(ResumeStatus status, List<ResumeResponse> resumeList) {
 
-    public static AdminResumeList of(ResumeStatus status, int count, List<ResumeResponse> resumeList) {
-        return new AdminResumeList(status, count, resumeList);
+    public static AdminResumeList of(ResumeStatus status, List<ResumeResponse> resumeList) {
+        return new AdminResumeList(status, resumeList);
     }
 }

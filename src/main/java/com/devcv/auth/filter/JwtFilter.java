@@ -1,16 +1,23 @@
 package com.devcv.auth.filter;
 
+import com.devcv.auth.dto.RefreshTokenResponse;
 import com.devcv.auth.jwt.JwtProvider;
 import com.devcv.auth.jwt.JwtTokenDto;
 import com.devcv.common.exception.ErrorCode;
 import com.devcv.common.exception.UnAuthorizedException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -20,7 +27,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
@@ -31,29 +37,26 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws IOException, ServletException {
         // 1. Request Header 에서 토큰 추출.
         String accessToken = jwtProvider.resolveAccessToken(request);
-        String refreshToken = jwtProvider.resolveRefreshToken(request);
         // 2. AccessToken 유/무 판별.
-        if (StringUtils.hasText(accessToken)) {
-            if(jwtProvider.validateToken(accessToken)){
-                // SpringContextHolder에 등록.
-                this.setAuthentication(accessToken);
-            // refreshToken 유/무 판별 -> 유효성 검사
-            } else if (!jwtProvider.validateToken(accessToken) && StringUtils.hasText(refreshToken)){
-                // refreshToken 유효성검사.
-                if(jwtProvider.validateToken(refreshToken)){
-                    // 검사완료되면 accessToken 재발급 jwtProvider.refreshTokenDto
-                    String email = String.valueOf(jwtProvider.parseClaims(refreshToken).get("email"));
-                    JwtTokenDto jwtTokenDto = jwtProvider.refreshTokenDto(email,refreshToken);
-                    response.setHeader("Authorization","Bearer "+jwtTokenDto.getAccessToken());
-                    response.setHeader("RefreshToken", "Bearer "+refreshToken);
-                    this.setAuthentication(jwtTokenDto.getAccessToken());
-                } else {
-                    throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        try {
+            log.info("REQUEST_JWTTOKEN : " + accessToken);
+            if (StringUtils.hasText(accessToken)) {
+                if(jwtProvider.validateToken(accessToken)){
+                    // 정상 : Authentication SecurityContext에 저장. setAuthentication
+                    this.setAuthentication(accessToken);
                 }
             }
+        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
+            request.setAttribute("exception", ErrorCode.JWT_INVALID_SIGN_ERROR.getMessage());
+        } catch (ExpiredJwtException e){
+            request.setAttribute("exception", ErrorCode.JWT_EXPIRED_ERROR.getMessage());
+        } catch (UnsupportedJwtException e) {
+            request.setAttribute("exception", ErrorCode.JWT_UNSUPPORTED_ERROR.getMessage());
+        } catch (IllegalArgumentException e) {
+            request.setAttribute("exception", ErrorCode.JWT_ILLEGALARGUMENT_ERROR.getMessage());
+        } catch (Exception e) {
+            request.setAttribute("exception", ErrorCode.JWTILLEGALARG_ERROR.getMessage());
         }
-        // 2. validateToken 으로 토큰 유효성 검사
-        // 정상 : Authentication SecurityContext에 저장. setAuthentication
         filterChain.doFilter(request, response);
     }
 

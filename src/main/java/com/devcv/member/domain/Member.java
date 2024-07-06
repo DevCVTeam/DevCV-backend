@@ -54,17 +54,19 @@ public class Member extends BaseTimeEntity {
     private RoleType memberRole; // 일반유저: user 관리자: admin
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "company", nullable = false)
+    @Column(name = "company")
     private CompanyType company;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "job", nullable = false)
+    @Column(name = "job")
     private JobType job;
 
     @Convert(converter = ListStringConverter.class)
-    @Column(name = "stack", nullable = false)
+    @Column(name = "stack")
     private List<String> stack;
 
+    @Column(name = "refreshToken")
+    private String refreshToken;
 }
 
 
