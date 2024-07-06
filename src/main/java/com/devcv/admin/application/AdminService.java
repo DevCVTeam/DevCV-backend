@@ -35,9 +35,19 @@ public class AdminService {
     private final ResumeRepository resumeRepository;
 
     public Event createEvent(EventRequest eventRequest) {
-        Event event = Event.of(eventRequest.name(), eventRequest.eventCategory(), eventRequest.startDate()
-                , eventRequest.endDate());
+        Event event = Event.of(eventRequest.name(), eventRequest.eventCategory(), eventRequest.point(),
+                eventRequest.startDate(), eventRequest.endDate());
         return eventRepository.save(event);
+    }
+
+    public Event deleteEvent(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException(ErrorCode.EVENT_NOT_FOUND));
+        if (event.getIsDeleted()) {
+            throw new NotFoundException(ErrorCode.EVENT_NOT_EXIST);
+        }
+        event.delete();
+        return event;
     }
 
     public PaginatedAdminResumeResponse getResumesByStatus(String input, int page, int size) {

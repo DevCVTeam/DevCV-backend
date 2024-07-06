@@ -48,6 +48,8 @@ public enum ErrorCode {
     RESUME_NOT_EXIST("삭제된 이력서입니다"),
     EVENT_NOT_FOUND("이벤트를 찾을 수 없습니다."),
     REFRESHTOKEN_NOT_FOUND("RefreshToken을 찾을 수 없습니다."),
+    EVENT_NOT_EXIST("삭제된 이벤트입니다"),
+
 
     //409
     CONFLICT_ERROR("요청 충돌 에러"),

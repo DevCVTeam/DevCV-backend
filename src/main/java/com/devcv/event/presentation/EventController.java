@@ -16,12 +16,13 @@ public class EventController {
 
     @GetMapping
     public ResponseEntity<EventListResponse> getEventList() {
-        return ResponseEntity.ok(eventService.getEventListResponse());
+        EventListResponse response = eventService.getEventListResponse();
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{event-id}")
     public ResponseEntity<EventResponse> getEvent(@PathVariable("event-id") Long eventId) {
-        EventResponse eventResponse = eventService.getEventResponse(eventId);
-        return ResponseEntity.ok(eventResponse);
+        EventResponse response = eventService.getEventResponse(eventId);
+        return ResponseEntity.ok(response);
     }
 }
