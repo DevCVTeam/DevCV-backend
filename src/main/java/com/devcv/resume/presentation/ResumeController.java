@@ -69,9 +69,7 @@ public class ResumeController {
             @RequestPart("resumeFile") MultipartFile resumeFile,
             @RequestPart("images") List<MultipartFile> images) {
 
-        if(userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails);
 
         Long memberId = Long.valueOf(userDetails.getUsername());
         Resume createdResume = resumeService.register(resumeRequest, resumeFile, images, memberId);
@@ -86,9 +84,7 @@ public class ResumeController {
     @GetMapping("/members/{member-id}/resumes")
     public ResponseEntity<ResumeListResponse> getResumeListResponse(@AuthenticationPrincipal UserDetails userDetails,
                                                                    @PathVariable("member-id") Long memberId) {
-        if(userDetails == null || !memberId.equals(Long.valueOf(userDetails.getUsername()))) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails, memberId);
         return ResponseEntity.ok().body(resumeService.findResumesByMemberId(memberId));
     }
     //------------마이페이지 이력서 판매내역 조회 요청 end---------------
@@ -101,9 +97,7 @@ public class ResumeController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable("member-id") Long memberId,
             @PathVariable("resume-id") Long resumeId) {
-        if(userDetails == null || !memberId.equals(Long.valueOf(userDetails.getUsername()))) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails, memberId);
         ResumeDto resumeDetail = resumeService.getRegisterResumeDetail(memberId, resumeId);
 
         // 삭제한 이력서 호출 시 접근 예외처리
@@ -121,9 +115,7 @@ public class ResumeController {
     public ResponseEntity<?> completeResumeRegistration(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable("resume-id") Long resumeId) {
-        if(userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails);
         Long memberId = Long.valueOf(userDetails.getUsername());
         Resume completedResume = resumeService.completeRegistration(memberId, resumeId);
 
@@ -141,9 +133,7 @@ public class ResumeController {
             @RequestPart("resumeFile") MultipartFile resumeFile,
             @RequestPart("images") List<MultipartFile> images) {
 
-        if(userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails);
         Long memberId = Long.valueOf(userDetails.getUsername());
 
         ResumeDto updatedResume = resumeService.modify(resumeId, memberId, resumeDto, resumeFile, images);
@@ -159,9 +149,7 @@ public class ResumeController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable("resume-id") Long resumeId) {
 
-        if (userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        validateUser(userDetails);
         Long memberId = Long.valueOf(userDetails.getUsername());
 
         Resume completedResume = resumeService.remove(resumeId, memberId);
@@ -170,6 +158,18 @@ public class ResumeController {
     }
     // ----------이력서 삭제 등록 요청 end----------------
 
+
+    private void validateUser(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        }
+    }
+
+    private void validateUser(UserDetails userDetails, Long memberId) {
+        if (userDetails == null || !memberId.equals(Long.valueOf(userDetails.getUsername()))) {
+            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        }
+    }
 
 
 }
