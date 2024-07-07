@@ -10,7 +10,6 @@ import java.util.List;
 @Entity
 @Getter
 @Table(name = "tb_order")
-@Builder(toBuilder = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order extends BaseTimeEntity {
 
