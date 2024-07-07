@@ -6,7 +6,6 @@ import com.devcv.resume.domain.dto.ResumeDto;
 import com.devcv.resume.domain.dto.ResumeListResponse;
 import com.devcv.resume.domain.dto.ResumeRequest;
 import com.devcv.resume.domain.enumtype.CompanyType;
-import com.devcv.resume.domain.enumtype.ResumeStatus;
 import com.devcv.resume.domain.enumtype.StackType;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,8 +27,6 @@ public interface ResumeService {
     ResumeDto getRegisterResumeDetail(Long memberId, Long resumeId);
     // 이력서 등록완료 요청
     Resume completeRegistration(Long memberId, Long resumeId);
-    // 이력서 엔티티 가져오기
-    Resume findByResumeId(Long resumeId);
     // 이력서 등록 수정
     ResumeDto modify(Long resumeId, Long memberId, ResumeDto resumeDto, MultipartFile resumeFile, List<MultipartFile> images);
     // 이력서 삭제
