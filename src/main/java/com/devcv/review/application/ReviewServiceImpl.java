@@ -1,26 +1,16 @@
 package com.devcv.review.application;
 
 import com.devcv.common.exception.ErrorCode;
-import com.devcv.common.exception.UnAuthorizedException;
 import com.devcv.member.domain.Member;
-import com.devcv.member.repository.MemberRepository;
 import com.devcv.order.domain.Order;
 import com.devcv.order.domain.OrderResume;
-import com.devcv.order.exception.OrderNotFoundException;
-import com.devcv.order.repository.OrderRepository;
-import com.devcv.order.repository.OrderResumeRepository;
 import com.devcv.resume.domain.Resume;
-import com.devcv.resume.domain.enumtype.ResumeStatus;
-import com.devcv.resume.exception.MemberNotFoundException;
-import com.devcv.resume.exception.ResumeNotFoundException;
-import com.devcv.resume.repository.ResumeRepository;
-import com.devcv.review.domain.Comment;
 import com.devcv.review.domain.Review;
 import com.devcv.review.domain.dto.PaginatedReviewResponse;
 import com.devcv.review.domain.dto.ReviewDto;
 import com.devcv.review.exception.AlreadyExistsException;
 import com.devcv.review.exception.ReviewNotFoundException;
-import com.devcv.review.repository.CommentRepository;
+import com.devcv.review.infrastructure.ReviewValidator;
 import com.devcv.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,38 +31,17 @@ import java.util.stream.Collectors;
 public class ReviewServiceImpl implements  ReviewService{
 
     private final ReviewRepository reviewRepository;
-    private final ResumeRepository resumeRepository;
-    private final MemberRepository memberRepository;
-    private final OrderRepository orderRepository;
-    private final OrderResumeRepository orderResumeRepository;
-    private final CommentRepository commentRepository;
-
     private final CommentService commentService;
+    private final ReviewValidator reviewValidator;
 
     // 구매후기 조회
     @Transactional
     @Override
     public PaginatedReviewResponse getListOfResume(Long resumeId, int page, int size, String sort) {
-        Pageable pageable;
 
-        // 평점 높은순, 평점 낮은순, default 조회
-        switch (sort) {
-            case "r-desc":
-                pageable = PageRequest.of(page-1, size, Sort.by("grade").descending());
-                break;
-            case "r-asc":
-                pageable = PageRequest.of(page-1, size, Sort.by("grade").ascending());
-                break;
-            default:
-                pageable = PageRequest.of(page-1, size, Sort.by("createdDate").descending());
-                break;
-        }
+        Pageable pageable = getPageable(page, size, sort);
 
-        Resume resume = resumeRepository.findById(resumeId)
-                .orElseThrow(() -> new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND));
-        if (resume.getStatus() != ResumeStatus.regcompleted) {
-            throw new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND);
-        }
+        Resume resume = reviewValidator.validateResume(resumeId);
 
         Page<Review> reviewPage = reviewRepository.findByResume(resume, pageable);
 
@@ -81,15 +49,7 @@ public class ReviewServiceImpl implements  ReviewService{
         long totalReviews = reviewRepository.countByResumeId(resumeId);
         int averageRating = reviewRepository.calculateAverageGrade(resumeId);
 
-        // 각 점수별 구매후기 개수 계산
-        Long[] ratingCounts = new Long[5];
-        Map<Integer, Long> numOfRating = reviewRepository.findByResume(resume, pageable).stream()
-                .collect(Collectors.groupingBy(Review::getGrade, Collectors.counting()));
-
-        for (int i = 0; i < 5; i++) {
-            ratingCounts[i] = numOfRating.getOrDefault(i + 1, 0L);
-        }
-
+        Long[] ratingCounts = calculateRatingCounts(reviewRepository.findAllByResume(resume));
 
         List<ReviewDto> reviewDtos = reviewPage.getContent().stream().map(this::entityToDto).toList();
         return new PaginatedReviewResponse(
@@ -115,35 +75,25 @@ public class ReviewServiceImpl implements  ReviewService{
     public Review register(Long resumeId, Long memberId, ReviewDto resumeReviewDto) {
 
         // 주문여부 확인
-        List<OrderResume> orderResumes = orderResumeRepository.findByMemberIdAndResumeId(memberId, resumeId);
-        if (orderResumes.isEmpty()) {
-            throw new OrderNotFoundException(ErrorCode.ORDER_NOT_FOUND);
-        }
+        List<OrderResume> orderResumes = reviewValidator.validateOrderExists(memberId,resumeId);
 
-        //  잘못된 접근 예외처리
-        Resume resume = resumeRepository.findById(resumeId)
-                .orElseThrow(() -> new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND));
-        if (resume.getStatus() != ResumeStatus.regcompleted) {
-            throw new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND);
-        }
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new MemberNotFoundException(ErrorCode.MEMBER_NOT_FOUND));
-        Order order = orderResumes.get(0).getOrder();
-        Long orderId = order.getOrderId();
-        resumeReviewDto.setResumeId(resumeId);
-        resumeReviewDto.setMemberId(memberId);
-        resumeReviewDto.setOrderId(orderId);
+        Resume resume = reviewValidator.validateResume(resumeId);
+        Member member = reviewValidator.validateMember(memberId);
 
         // 구매후기 중복등록 확인
         if (reviewRepository.existsByResumeAndMember(resume, member)) {
             throw new AlreadyExistsException(ErrorCode.ALREADY_EXISTS);
         }
 
+        Order order = orderResumes.get(0).getOrder();
+        Long orderId = order.getOrderId();
+        resumeReviewDto.setResumeId(resumeId);
+        resumeReviewDto.setMemberId(memberId);
+        resumeReviewDto.setOrderId(orderId);
+
         Review resumeReview = dtoToEntity(resumeReviewDto, resume, member, order);
 
-        reviewRepository.save(resumeReview);
-
-        return resumeReview;
+        return reviewRepository.save(resumeReview);
     }
 
     // 구매후기 수정
@@ -153,16 +103,8 @@ public class ReviewServiceImpl implements  ReviewService{
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND));
 
-        // 구매후기 수정 권한 확인
-        if (!review.getMember().getMemberId().equals(memberId)) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-
-        // 잘못된 접근 예외처리
-        Optional<Review> reviewIdOpt = reviewRepository.findByResumeIdAndReviewId(resumeId, reviewId);
-        if (reviewIdOpt.isEmpty()) {
-            throw new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND);
-        }
+        reviewValidator.validateMemberAuthorization(memberId, review);
+        reviewValidator.validateReview(resumeId, reviewId);
 
         review.changeText(reviewDto.getText());
         review.changeGrade(reviewDto.getGrade());
@@ -176,30 +118,33 @@ public class ReviewServiceImpl implements  ReviewService{
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND));
 
-        // 구매후기 삭제 권한 확인
-        if (!review.getMember().getMemberId().equals(memberId)) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
+        reviewValidator.validateMemberAuthorization(memberId, review);
+        reviewValidator.validateReview(resumeId, reviewId);
 
-        // 잘못된 접근 예외처리
-        Optional<Review> reviewIdOpt = reviewRepository.findByResumeIdAndReviewId(resumeId, reviewId);
-        if (reviewIdOpt.isEmpty()) {
-            throw new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND);
-        }
-
-        // 판매자 댓글 삭제
-        List<Comment> comments = commentRepository.findByReview(review);
-        for (Comment comment : comments) {
-            commentService.removeComment(comment.getCommentId());
-        }
-
+        commentService.removeCommentsByReview(review);
         reviewRepository.deleteById(reviewId);
     }
 
+    private Pageable getPageable(int page, int size, String sort) {
+        switch (sort) {
+            case "r-desc":
+                return PageRequest.of(page - 1, size, Sort.by("grade").descending());
+            case "r-asc":
+                return PageRequest.of(page - 1, size, Sort.by("grade").ascending());
+            default:
+                return PageRequest.of(page - 1, size, Sort.by("createdDate").descending());
+        }
+    }
 
+    private Long[] calculateRatingCounts(List<Review> reviews) {
+        Long[] ratingCounts = new Long[5];
+        Map<Integer, Long> numOfRating = reviews.stream()
+                .collect(Collectors.groupingBy(Review::getGrade, Collectors.counting()));
 
-
-
-
+        for (int i = 0; i < 5; i++) {
+            ratingCounts[i] = numOfRating.getOrDefault(i + 1, 0L);
+        }
+        return ratingCounts;
+    }
 
 }
