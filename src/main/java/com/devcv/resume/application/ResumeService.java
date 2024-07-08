@@ -1,10 +1,7 @@
 package com.devcv.resume.application;
 
 import com.devcv.resume.domain.Resume;
-import com.devcv.resume.domain.dto.PaginatedResumeResponse;
-import com.devcv.resume.domain.dto.ResumeDto;
-import com.devcv.resume.domain.dto.ResumeListResponse;
-import com.devcv.resume.domain.dto.ResumeRequest;
+import com.devcv.resume.domain.dto.*;
 import com.devcv.resume.domain.enumtype.CompanyType;
 import com.devcv.resume.domain.enumtype.StackType;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +14,8 @@ import java.util.List;
 public interface ResumeService {
     // 이력서 목록 조회
     PaginatedResumeResponse findResumes(StackType stackType, CompanyType companyType, int page, int size);
+    // 사이트맵 등록용 목록 조회
+    List<ResumeSitemapDto> getResumeIdsAndCreationDates();
     // 이력서 상세 조회
     ResumeDto getResumeDetail(Long resumeId);
     // 회원별 이력서 조회

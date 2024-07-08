@@ -5,10 +5,7 @@ import com.devcv.common.exception.InternalServerException;
 import com.devcv.common.exception.UnAuthorizedException;
 import com.devcv.resume.application.ResumeService;
 import com.devcv.resume.domain.Resume;
-import com.devcv.resume.domain.dto.PaginatedResumeResponse;
-import com.devcv.resume.domain.dto.ResumeDto;
-import com.devcv.resume.domain.dto.ResumeListResponse;
-import com.devcv.resume.domain.dto.ResumeRequest;
+import com.devcv.resume.domain.dto.*;
 import com.devcv.resume.domain.enumtype.CompanyType;
 import com.devcv.resume.domain.enumtype.ResumeStatus;
 import com.devcv.resume.domain.enumtype.StackType;
@@ -46,6 +43,18 @@ public class ResumeController {
         }
     }
     //------------이력서 목록 조회 요청 end---------------
+
+    //------------이력서 ID와 생성일자 조회 요청 start---------------
+    @GetMapping("/resumes/sitemap")
+    public ResponseEntity<List<ResumeSitemapDto>> getResumeIdsAndCreationDates() {
+        try {
+            List<ResumeSitemapDto> response = resumeService.getResumeIdsAndCreationDates();
+            return ResponseEntity.ok(response);
+        } catch (InternalServerException e) {
+            throw new InternalServerException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+    //------------이력서 ID와 생성일자 조회 요청 end---------------
 
 
     //------------이력서 상세 조회 요청 start--------------
