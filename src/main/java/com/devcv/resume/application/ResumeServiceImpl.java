@@ -57,6 +57,14 @@ public class ResumeServiceImpl implements ResumeService {
         return createPaginatedResumeResponse(resumePage, resumeDTOs);
     }
 
+    @Override
+    public List<ResumeSitemapDto> getResumeIdsAndCreationDates() {
+        List<Resume> resumes = resumeRepository.findAllByStatus(ResumeStatus.regcompleted);
+        return resumes.stream()
+                .map(resume -> new ResumeSitemapDto(resume.getResumeId(), resume.getCreatedDate()))
+                .collect(Collectors.toList());
+    }
+
 
     // 이력서 상세 조회
     @Override

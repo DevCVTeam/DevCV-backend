@@ -17,6 +17,8 @@ import java.util.Optional;
 
 public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
+    List<Resume> findAllByStatus(ResumeStatus status);
+
     // 판매내역 이력서 상세 조회
     @Query("SELECT r FROM Resume r WHERE r.resumeId = :resumeId AND r.member.memberId = :memberId")
     Optional<Resume> findByIdAndMemberId(Long resumeId, Long memberId);
@@ -65,6 +67,10 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
     List<Object[]> findByIdAndStatus(Long resumeId);
 
     //----------------등록완료 default인 메서드 start-----------------
+
+    default List<Resume> findAllByStatus() {
+        return findAllByStatus(ResumeStatus.regcompleted);
+    }
     default Page<Object[]> findApprovedResumes(Pageable pageable) {
         return findByStatus(ResumeStatus.regcompleted, pageable);
     }
