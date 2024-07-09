@@ -6,10 +6,11 @@ import com.devcv.resume.domain.enumtype.StackType;
 import java.time.LocalDateTime;
 
 public record OrderSheetResume(String title, String sellerName, int price, StackType stackType,
-                               LocalDateTime updatedDate) {
+                               LocalDateTime updatedDate, String thumbnailPath) {
 
     public static OrderSheetResume from(Resume resume) {
         return new OrderSheetResume(resume.getTitle(), resume.getMember().getNickName(), resume.getPrice(),
-                resume.getCategory().getStackType(), resume.getUpdatedDate());
+                resume.getCategory().getStackType(), resume.getUpdatedDate(),
+                resume.getImageList().get(0).getResumeImgPath());
     }
 }
