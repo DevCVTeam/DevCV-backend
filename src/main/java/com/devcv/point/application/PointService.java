@@ -4,6 +4,7 @@ import com.devcv.member.domain.Member;
 import com.devcv.point.domain.Point;
 import com.devcv.point.dto.PointResponse;
 import com.devcv.point.repository.PointRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,7 @@ public class PointService {
         return PointResponse.of(memberId, getMyPoint(memberId));
     }
 
+    @Transactional
     public Point savePoint(Member member, Long amount, String description) {
 
         Point point = Point.save(member, amount, description);
@@ -31,6 +33,7 @@ public class PointService {
         return pointRepository.save(point);
     }
 
+    @Transactional
     public Point usePoint(Member member, Long amount, String description) {
 
         Point point = Point.use(member, amount, description);

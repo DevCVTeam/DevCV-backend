@@ -17,6 +17,8 @@ import com.devcv.member.exception.DuplicationException;
 import com.devcv.member.exception.NotNullException;
 import com.devcv.member.repository.MemberLogRepository;
 import com.devcv.member.repository.MemberRepository;
+import com.devcv.point.domain.Point;
+import com.devcv.point.repository.PointRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,12 +39,15 @@ import java.time.LocalDateTime;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
+
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final MemberDetailsService memberDetailsService;
     private final MemberRepository memberRepository;
     private final MemberLogRepository memberLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final PointRepository pointRepository;
+
     @Value("${keys.social_password}")
     private String socialPassword;
 
@@ -69,11 +74,13 @@ public class AuthService {
                 memberRepository.save(member);
                 memberLogRepository.save(MemberLog.builder().logAgent(request.getHeader("user-agent")).logEmail(member.getEmail())
                         .logIp(getIp(request)).logSignUpDate(LocalDateTime.now()).memberId(member.getMemberId()).build());
+                SignUpPointReward(member);
             }
         } catch (NotNullException e) {
             throw new NotNullException(ErrorCode.NULL_ERROR);
         }
     }
+
     @Transactional
     public MemberLoginResponse login(MemberLoginRequest memberLoginRequest) {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -127,4 +134,8 @@ public class AuthService {
         return ip;
     }
 
+    private void SignUpPointReward(Member member) {
+        Point point = Point.signupReward(member);
+        pointRepository.save(point);
+    }
 }

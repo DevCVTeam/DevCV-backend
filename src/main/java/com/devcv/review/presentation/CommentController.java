@@ -33,12 +33,8 @@ public class CommentController {
     public ResponseEntity<CommentDto> addComment(@PathVariable("review-id") Long reviewId,
                                                  @AuthenticationPrincipal UserDetails userDetails, @RequestBody CommentDto commentDto) {
 
-        if(userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-        Long memberId = Long.valueOf(userDetails.getUsername());
-        Member member = memberService.findMemberBymemberId(memberId);
-
+       Long memberId = validateUser(userDetails);
+       Member member = memberService.findMemberBymemberId(memberId);
 
         CommentDto reviewComment = commentService.addComment(reviewId, member, commentDto);
         if (reviewComment != null) {
@@ -46,6 +42,13 @@ public class CommentController {
         } else {
             throw new InternalServerException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public Long validateUser(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        }
+        return Long.valueOf(userDetails.getUsername());
     }
 
 }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -24,6 +25,8 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     // 특정 이력서 모든 리뷰 확인
     @EntityGraph(attributePaths = {"member", "order"}, type=EntityGraph.EntityGraphType.FETCH)
     Page<Review> findByResume(Resume resume, Pageable pageable);
+
+    List<Review> findAllByResume(Resume resume);
 
     // 특정 회원이 특정 이력서에 대해 이미 구매후기를 작성했는지 중복 확인
     @Query("SELECT COUNT(r) > 0 FROM Review r WHERE r.resume = :resume AND r.member = :member")

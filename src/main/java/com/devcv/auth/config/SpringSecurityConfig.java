@@ -57,7 +57,7 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests()
                 .requestMatchers("/members/login","/members/signup","/members/find-id","/members/cert-email","/members/duplication-email",
                         "/members/find-pw/email","/members/find-pw","/members/{member-id}/password","/admin/login","/members/refresh-token",
-                         "/members/kakao-login","/members/google-login","/resumes","/resumes/{resume-id}", "/resumes/{resume-id}/reviews").permitAll()
+                         "/members/kakao-login","/members/google-login","/resumes/sitemap","/resumes","/resumes/{resume-id}", "/resumes/{resume-id}/reviews").permitAll()
 //                .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .requestMatchers("/admin/**").hasRole(RoleType.admin.name()) // 관리자 페이지
                 .anyRequest().authenticated()   // 이외 인증필요 -> Header에 "Bearer {accessToken}" 형태로 요청

@@ -50,7 +50,7 @@ public class ReviewController {
                                             @AuthenticationPrincipal UserDetails userDetails,
                                             @RequestBody ReviewDto resumeReviewDto) {
 
-        Long memberId = Long.valueOf(userDetails.getUsername());
+        Long memberId = validateUser(userDetails);
 
         Review resumeReview = reviewService.register(resumeId, memberId, resumeReviewDto);
 
@@ -71,10 +71,7 @@ public class ReviewController {
             @RequestBody ReviewDto reviewDto,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        if(userDetails == null) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-        Long memberId = Long.valueOf(userDetails.getUsername());
+        Long memberId = validateUser(userDetails);
 
         Review modifiedReview = reviewService.modifyReview(memberId, resumeId, reviewId, reviewDto);
         if (modifiedReview != null) {
@@ -97,19 +94,22 @@ public class ReviewController {
             @PathVariable("review-id") Long reviewId,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        try {
-            Long memberId = Long.valueOf(userDetails.getUsername());
-            reviewService.deleteReview(resumeId, memberId, reviewId);
+        Long memberId =validateUser(userDetails);
+        reviewService.deleteReview(resumeId, memberId, reviewId);
+
+        if (reviewId != null) {
             return Map.of("deleted reviewId", reviewId);
-        }catch(UnAuthorizedException e) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        } catch (ResumeNotFoundException e) {
-            throw new ResumeNotFoundException(ErrorCode.RESUME_NOT_FOUND);
-        } catch (InternalServerException e) {
+        } else {
             throw new InternalServerException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
     // ----------------------구매후기 삭제 end  --------------------------
 
+    public Long validateUser(UserDetails userDetails) {
+        if (userDetails == null) {
+            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
+        }
+        return Long.valueOf(userDetails.getUsername());
+    }
 
 }

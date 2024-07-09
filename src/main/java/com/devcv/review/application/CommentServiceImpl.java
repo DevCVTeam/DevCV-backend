@@ -8,6 +8,7 @@ import com.devcv.review.domain.Review;
 import com.devcv.review.domain.dto.CommentDto;
 import com.devcv.review.exception.AlreadyExistsException;
 import com.devcv.review.exception.ReviewNotFoundException;
+import com.devcv.review.infrastructure.ReviewValidator;
 import com.devcv.review.repository.CommentRepository;
 import com.devcv.review.repository.ReviewRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,29 +16,24 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CommentServiceImpl implements  CommentService{
 
-    private final ReviewRepository reviewRepository;
     private final CommentRepository commentRepository;
+    private final ReviewValidator reviewValidator;
 
     @Transactional
     @Override
     public CommentDto addComment(Long reviewId, Member member, CommentDto commentDto) {
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND));
+        Review review = reviewValidator.validateReview(reviewId);
 
-        if (!review.getResume().getMember().getMemberId().equals(member.getMemberId())) {
-            throw new UnAuthorizedException(ErrorCode.UNAUTHORIZED_ERROR);
-        }
-
-        // 한 판매자가 특정 리뷰에 대해 이미 코멘트를 작성했는지 확인
-        if (commentRepository.existsByReviewAndMember(review, member)) {
-            throw new AlreadyExistsException(ErrorCode.ALREADY_EXISTS);
-        }
+        reviewValidator.validateCommenterAuthorization(member.getMemberId(), review);
+        reviewValidator.validateCommentExists(review, member);
 
         Comment comment = Comment.builder()
                 .review(review)
@@ -53,10 +49,20 @@ public class CommentServiceImpl implements  CommentService{
     }
 
     @Transactional
+    public void removeCommentsByReview(Review review) {
+        List<Comment> comments = commentRepository.findByReview(review);
+        for (Comment comment : comments) {
+            removeComment(comment.getCommentId());
+        }
+    }
+
+    @Transactional
     @Override
     public void removeComment(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ReviewNotFoundException(ErrorCode.REVIEW_NOT_FOUND));
+
+        reviewValidator.validateCommentAuthorization(comment.getMember(), comment);
 
         Review review = comment.getReview();
         review.removeComment(comment);

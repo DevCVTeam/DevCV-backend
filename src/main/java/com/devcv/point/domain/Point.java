@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Point {
 
+    private static final Long SIGN_UP_POINT = 5000L;
+    private static final String SIGN_UP_POINT_DESCRIPTION = "회원가입 보상";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -55,5 +58,9 @@ public class Point {
     public static Point use(Member member, Long amount, String description) {
         Long negativeAmount = -amount;
         return new Point(member, negativeAmount, TransactionType.USE, description);
+    }
+
+    public static Point signupReward(Member member) {
+        return new Point(member, SIGN_UP_POINT, TransactionType.SAVE, SIGN_UP_POINT_DESCRIPTION);
     }
 }
