@@ -25,6 +25,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+@Tag(name = "Member", description = "Member 관련 API 입니다.")
 @RestController
 @RequestMapping("/members/*")
 @PropertySource("classpath:application.yml")
@@ -118,14 +120,6 @@ public class MemberController {
 //-------------------------------------------------------- 비밀번호찾기-이메일 start --------------------------------------------------------
     @PostMapping("/find-pw/email")
     public ResponseEntity<MemberFindPwResponse> findPwEmail(@RequestParam String email) {
-        // NULL CHECK
-        try{
-            if(email == null){
-                throw new NotNullException(ErrorCode.NULL_ERROR);
-            }
-        } catch (Exception e){
-            throw new NotNullException(ErrorCode.NULL_ERROR);
-        }
         // 이메일로 가입되어있는 아이디 찾기
         try {
             Member findpwEmailMember = memberService.findMemberByEmail(email);
@@ -134,7 +128,7 @@ public class MemberController {
             } else {
                 throw new NotSignUpException(ErrorCode.FIND_ID_ERROR);
             }
-        } catch (Exception e){
+        } catch (NotSignUpException e){
             e.fillInStackTrace();
             throw new NotSignUpException(ErrorCode.FIND_ID_ERROR);
         }
@@ -143,15 +137,6 @@ public class MemberController {
 //-------------------------------------------------------- 비밀번호찾기-본인인증 start --------------------------------------------------------
     @PostMapping("/find-pw")
     public ResponseEntity<MemberFindOfPhoneReponse> findPwPhone(@RequestBody MemberFindOfPhoneRequest memberFindOfPhoneRequest) {
-        // NULL CHECK
-        try{
-            if(memberFindOfPhoneRequest.getMemberName() == null || memberFindOfPhoneRequest.getPhone() == null){
-                throw new NotNullException(ErrorCode.NULL_ERROR);
-            }
-        } catch (NotNullException e){
-            throw new NotNullException(ErrorCode.NULL_ERROR);
-        }
-
         // 아이디 찾기
         try{
             List<Member> findIdMemberList = memberService.findMemberBymemberNameAndPhone(memberFindOfPhoneRequest.getMemberName(),memberFindOfPhoneRequest.getPhone());
@@ -177,15 +162,6 @@ public class MemberController {
 //-------------------------------------------------------- 비밀번호변경 start --------------------------------------------------------
     @PatchMapping("/{member-id}/password")
     public ResponseEntity<String> modiPassword(@PathVariable("member-id") Long memberId, @RequestBody MemberModifyPasswordRequest memberModifyPasswordRequest){
-        // NULL CHECK
-        try {
-            if(memberModifyPasswordRequest.getPassword() == null || memberId == null){
-                throw new NotNullException(ErrorCode.NULL_ERROR);
-            }
-        } catch (Exception e) {
-            e.fillInStackTrace();
-            throw new NotNullException(ErrorCode.NULL_ERROR);
-        }
         // memberId로 찾은 멤버 패스워드 수정.
         try {
             MemberDetails memberDetails = (MemberDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -247,18 +223,6 @@ public class MemberController {
 //-------------------------------------------------------- 회원정보수정 start --------------------------------------------------------
     @PutMapping("/{member-id}")
     public ResponseEntity<String> modifyMember(@RequestBody MemberModifyAllRequest memberModifyAllRequest, @PathVariable("member-id") Long memberId) {
-        // NULL CHECK
-        try {
-            if(memberModifyAllRequest.getJob() == null || memberModifyAllRequest.getAddress() == null || memberModifyAllRequest.getStack() == null
-                    || memberModifyAllRequest.getEmail() == null || memberModifyAllRequest.getMemberName() == null || memberModifyAllRequest.getSocial() == null
-                    || memberModifyAllRequest.getCompany() == null || memberModifyAllRequest.getPhone() == null || memberId == null
-                    || memberModifyAllRequest.getNickName() == null || memberModifyAllRequest.getPassword() == null){
-                throw new NotNullException(ErrorCode.NULL_ERROR);
-            }
-        } catch (NotNullException e){
-            e.fillInStackTrace();
-            throw new NotNullException(ErrorCode.NULL_ERROR);
-        }
         try {
             // 로그인한 사용자 memberId 확인
             MemberDetails memberDetails = (MemberDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
