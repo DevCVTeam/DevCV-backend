@@ -3,7 +3,9 @@ package com.devcv.member.application;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -12,11 +14,13 @@ import java.io.UnsupportedEncodingException;
 import java.util.Objects;
 
 @Service
-@NoArgsConstructor(force = true)
 public class MailService {
 
-    @Autowired
     private final JavaMailSender javamailSender;
+
+    public MailService(JavaMailSender javamailSender) {
+        this.javamailSender = javamailSender;
+    }
     private static final String senderEmail = "devcv0712@gmail.com";
     private static Long number;
 

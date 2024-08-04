@@ -5,7 +5,7 @@ import com.devcv.auth.filter.JwtAuthenticationEntryPoint;
 import com.devcv.auth.jwt.JwtProvider;
 import com.devcv.member.domain.enumtype.RoleType;
 import lombok.RequiredArgsConstructor;
-// import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+/*import org.springframework.boot.autoconfigure.security.servlet.PathRequest;*/
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,7 +41,6 @@ public class SpringSecurityConfig {
                 .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
-
                 .and()
                 .headers()
                 .frameOptions()
@@ -55,6 +54,7 @@ public class SpringSecurityConfig {
                 // 로그인, 회원가입 permitall
                 .and()
                 .authorizeHttpRequests()
+                .requestMatchers("/swagger", "/swagger-ui.html", "/swagger-ui/**", "/api-docs", "/api-docs/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/members/login","/members/signup","/members/find-id","/members/cert-email","/members/duplication-email",
                         "/members/find-pw/email","/members/find-pw","/members/{member-id}/password","/admin/login","/members/refresh-token",
                          "/members/kakao-login","/members/google-login","/resumes/sitemap","/resumes","/resumes/{resume-id}", "/resumes/{resume-id}/reviews").permitAll()
