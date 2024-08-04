@@ -5,7 +5,7 @@ import com.devcv.auth.filter.JwtAuthenticationEntryPoint;
 import com.devcv.auth.jwt.JwtProvider;
 import com.devcv.member.domain.enumtype.RoleType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+/*import org.springframework.boot.autoconfigure.security.servlet.PathRequest;*/
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,7 +41,6 @@ public class SpringSecurityConfig {
                 .exceptionHandling()
                 .authenticationEntryPoint(jwtAuthenticationEntryPoint)
                 .accessDeniedHandler(jwtAccessDeniedHandler)
-
                 .and()
                 .headers()
                 .frameOptions()
@@ -59,7 +58,7 @@ public class SpringSecurityConfig {
                 .requestMatchers("/members/login","/members/signup","/members/find-id","/members/cert-email","/members/duplication-email",
                         "/members/find-pw/email","/members/find-pw","/members/{member-id}/password","/admin/login","/members/refresh-token",
                          "/members/kakao-login","/members/google-login","/resumes/sitemap","/resumes","/resumes/{resume-id}", "/resumes/{resume-id}/reviews").permitAll()
-                .requestMatchers(PathRequest.toH2Console()).permitAll()
+//                .requestMatchers(PathRequest.toH2Console()).permitAll()
                 .requestMatchers("/admin/**").hasRole(RoleType.admin.name()) // 관리자 페이지
                 .anyRequest().authenticated()   // 이외 인증필요 -> Header에 "Bearer {accessToken}" 형태로 요청
                 // JwtFilter 를 addFilterBefore 로 등록했던 JwtSecurityConfig 클래스를 적용
