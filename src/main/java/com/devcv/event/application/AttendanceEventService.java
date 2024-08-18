@@ -58,7 +58,7 @@ public class AttendanceEventService {
     }
 
     private void savePoint(Member member, Event event) {
-        pointService.savePoint(member, event.getPoint(), event.getName());
+        pointService.awardAttendancePoint(member, event.getPoint(), event.getName());
     }
 
     public AttendanceListResponse getAttendanceListResponse(Long memberId, Long eventId) {

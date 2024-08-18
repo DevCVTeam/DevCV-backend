@@ -17,8 +17,7 @@ import com.devcv.member.exception.DuplicationException;
 import com.devcv.member.exception.NotNullException;
 import com.devcv.member.repository.MemberLogRepository;
 import com.devcv.member.repository.MemberRepository;
-import com.devcv.point.domain.Point;
-import com.devcv.point.repository.PointRepository;
+import com.devcv.point.application.PointService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +73,7 @@ public class AuthService {
                 memberRepository.save(member);
                 memberLogRepository.save(MemberLog.builder().logAgent(request.getHeader("user-agent")).logEmail(member.getEmail())
                         .logIp(getIp(request)).logSignUpDate(LocalDateTime.now()).memberId(member.getMemberId()).build());
-                SignUpPointReward(member);
+                pointService.awardSignUpBonus(member);
             }
         } catch (NotNullException e) {
             throw new NotNullException(ErrorCode.NULL_ERROR);
@@ -132,10 +131,5 @@ public class AuthService {
             ip = request.getRemoteAddr();
         }
         return ip;
-    }
-
-    private void SignUpPointReward(Member member) {
-        Point point = Point.signupReward(member);
-        pointRepository.save(point);
     }
 }
