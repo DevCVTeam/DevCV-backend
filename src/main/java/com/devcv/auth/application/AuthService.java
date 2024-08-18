@@ -45,7 +45,7 @@ public class AuthService {
     private final MemberLogRepository memberLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-    private final PointRepository pointRepository;
+    private final PointService pointService;
 
     @Value("${keys.social_password}")
     private String socialPassword;
