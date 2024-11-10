@@ -28,9 +28,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderService {
 
-    private final static String DESCRIPTION = "이력서 구매 - 주문번호:";
-    private final static String COMMISSION_DESCRIPTION = "이력서 판매 적립 - 주문번호:";
-
     private final OrderRepository orderRepository;
     private final ResumeRepository resumeRepository;
     private final OrderResumeRepository orderResumeRepository;
@@ -61,14 +58,13 @@ public class OrderService {
         for (CartDto dto : cartOrderRequest.cartList()) {
             Resume resume = getResume(dto.resumeId());
             validateResume(resume, dto, existingResumeIdList);
-            pointService.savePoint(member, (long) (resume.getPrice() * 0.1),
-                    COMMISSION_DESCRIPTION + order.getOrderNumber());
+            pointService.rewardSalesPoint(member, (long) resume.getPrice(), order.getOrderNumber());
             OrderResume orderResume = OrderResume.of(order, resume);
             orderResumeList.add(orderResume);
         }
         validateTotalPriceForDB(cartOrderRequest, orderResumeList);
         orderResumeRepository.saveAll(orderResumeList);
-        pointService.usePoint(member, cartOrderRequest.totalPrice(), DESCRIPTION + order.getOrderNumber());
+        pointService.usePoint(member, cartOrderRequest.totalPrice(), order.getOrderNumber());
         order.updateOrderResumeList(orderResumeList);
         return order;
     }
