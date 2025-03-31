@@ -48,5 +48,9 @@ public class ResumeResponse {
         return null;
     }
 
+    public ResumeResponse withResumeFilePath(String resumeFilePath) {
+        this.resumeFilePath = resumeFilePath;
+        return this;
+    }
 
 }

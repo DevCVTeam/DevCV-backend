@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,11 +22,11 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
     // 판매내역 이력서 상세 조회
     @Query("SELECT r FROM Resume r WHERE r.resumeId = :resumeId AND r.member.memberId = :memberId")
-    Optional<Resume> findByIdAndMemberId(Long resumeId, Long memberId);
+    Optional<Resume> findByIdAndMemberId(@Param("resumeId") Long resumeId,@Param("memberId") Long memberId);
 
     //이력서 조회
     @EntityGraph(attributePaths = {"member", "category", "imageList"}, type = EntityGraph.EntityGraphType.FETCH)
-    Optional<Resume> findByResumeId(Long resumeId);
+    Optional<Resume> findByResumeId(@Param("resumeId") Long resumeId);
 
     // 전체 이력서 조회
     @Query("SELECT rm, AVG(COALESCE(rv.grade, 0)), COUNT(rv) " +
@@ -36,14 +37,17 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
 
     // 회원별 이력서 조회
     @Query("SELECT rm FROM Resume rm WHERE rm.member.memberId = :memberId AND rm.delFlag = false")
-    List<Resume> findByMember(Long memberId);
+    List<Resume> findByMember(@Param("memberId") Long memberId);
 
     // 직무 & 회사별 이력서 조회
     @Query("SELECT rm, AVG(COALESCE(rv.grade, 0)), COUNT(rv) " +
             "FROM Resume rm LEFT JOIN Review rv ON rv.resume = rm " +
             "WHERE rm.category.stackType = :stackType AND rm.category.companyType = :companyType AND rm.status = :status " +
             "GROUP BY rm")
-    Page<Object[]> findByCategory_StackTypeAndCategory_CompanyTypeAndStatus(StackType stackType, CompanyType companyType, ResumeStatus status, Pageable pageable);
+    Page<Object[]> findByCategory_StackTypeAndCategory_CompanyTypeAndStatus(@Param("stackType") StackType stackType,
+                                                                            @Param("companyType") CompanyType companyType,
+                                                                            @Param("status") ResumeStatus status,
+                                                                            Pageable pageable);
 
     // 직무별 이력서 조회
     @Query("SELECT rm, AVG(COALESCE(rv.grade, 0)), COUNT(rv) " +
@@ -64,7 +68,7 @@ public interface ResumeRepository extends JpaRepository<Resume, Long> {
             "FROM Resume r LEFT JOIN Review rv ON rv.resume = r " +
             "WHERE r.resumeId = :resumeId AND r.status = 'regCompleted' " +
             "GROUP BY r")
-    List<Object[]> findByIdAndStatus(Long resumeId);
+    List<Object[]> findByIdAndStatus(@Param("resumeId") Long resumeId);
 
     //----------------등록완료 default인 메서드 start-----------------
 

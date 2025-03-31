@@ -62,7 +62,13 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR("서버 내부에 문제가 발생했습니다."),
     RESUME_NOT_APPROVAL("이력서가 승인대기 상태입니다"),
     TEST_ERROR("테스트용 에러입니다."),
-    ;
+    IO_EXCEPTION_ON_IMAGE_DOWNLOAD("이력서 파일이 없습니다."),
+    S3_URL_GENERATION_EXCEPTION("이력서 URL이 없습니다."),
+    FILE_NOT_FOUND_IN_S3("파일이 존재하지 않습니다."),
+    INVALID_S3_URL_FORMAT("버킷 URL이 잘못되었습니다."),
+    S3_DOWNLOAD_EXCEPTION("파일 다운로드에 실패하였습니다"),
+    UNEXPECTED_S3_ERROR("핸들링되지 않은 버킷에러입니다."),
+    PDF_PROCESSING_ERROR("PDF 개인정보마스킹처리에 실패하였습니다.");
 
     private final String message;
 
